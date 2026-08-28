@@ -1,0 +1,147 @@
+/* ============================================================
+   Silai — Design Tokens
+   Savannah (warm, earthy, matte) + macOS (clean, layered, calm)
+   No neon. No glow. Natural pigments only.
+   ============================================================ */
+
+:root {
+  /* ---- Savannah pigment scale ---------------------------------- */
+  --bone-50:  #faf6ee;   /* lightest paper */
+  --bone-100: #f4eede;
+  --bone-200: #ece2cd;
+  --sand-300: #e2d4b8;
+  --sand-400: #d3c19c;
+  --clay-500: #b98a4e;
+  --bark-600: #7c6748;
+  --bark-700: #5b4a34;
+  --bark-800: #3c3021;
+  --bark-900: #2a2117;   /* darkest ink */
+
+  /* ---- Accents (muted, no saturation spikes) ------------------- */
+  --acacia:      #b7873a;  /* golden ochre — primary accent */
+  --acacia-deep: #9a6f2c;
+  --acacia-soft: #ecdcb9;
+  --sage:        #6f7c4e;  /* acacia leaf green — secondary */
+  --sage-deep:   #56623b;
+  --sage-soft:   #dfe3cf;
+  --clay:        #b25f3c;  /* terracotta — urgent / dispatch */
+  --clay-soft:   #f0d9cd;
+  --plum:        #7a4b52;  /* muted accent for course/misc */
+
+  /* ---- Semantic surfaces (light) ------------------------------- */
+  --app-bg:        #ece3d2;               /* desktop behind the window */
+  --window-bg:     #faf6ee;
+  --surface:       #fffdf7;               /* cards */
+  --surface-2:     #f6f0e2;               /* sunken / inset */
+  --sidebar-bg:    rgba(240, 233, 218, 0.72);
+  --titlebar-bg:   rgba(250, 246, 238, 0.80);
+
+  --text:          #2a2117;
+  --text-soft:     #6a5c47;
+  --text-faint:    #9a8b72;
+  --hairline:      #e4d9c4;
+  --hairline-soft: #ede4d3;
+
+  /* ---- Status (earthen, never neon) ---------------------------- */
+  --ok:      #6f7c4e;   --ok-bg:   #e6ead6;
+  --warn:    #b7873a;   --warn-bg: #f3e6c8;
+  --urgent:  #b25f3c;   --urgent-bg:#f2ddd1;
+  --info:    #6a7f86;   --info-bg: #dde7e8;
+
+  /* ---- macOS window traffic lights ----------------------------- */
+  --tl-red:    #ff5f57;
+  --tl-yellow: #febc2e;
+  --tl-green:  #28c840;
+
+  /* ---- Radius -------------------------------------------------- */
+  --r-window: 14px;
+  --r-lg: 14px;
+  --r-md: 10px;
+  --r-sm: 7px;
+  --r-pill: 999px;
+
+  /* ---- Elevation (warm-tinted, soft, macOS-calm) --------------- */
+  --sh-window: 0 24px 60px -12px rgba(58, 45, 28, 0.36), 0 6px 18px -6px rgba(58, 45, 28, 0.22);
+  --sh-1: 0 1px 2px rgba(58, 45, 28, 0.06), 0 1px 1px rgba(58, 45, 28, 0.04);
+  --sh-2: 0 2px 8px -2px rgba(58, 45, 28, 0.10), 0 1px 2px rgba(58, 45, 28, 0.06);
+  --sh-3: 0 12px 28px -8px rgba(58, 45, 28, 0.18), 0 3px 8px -4px rgba(58, 45, 28, 0.10);
+  --ring: 0 0 0 3px rgba(183, 135, 58, 0.28);
+
+  /* ---- Type ---------------------------------------------------- */
+  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+
+  /* ---- Motion -------------------------------------------------- */
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ============================================================
+   Dark (dusk over the savannah) — kept muted and warm
+   ============================================================ */
+:root[data-theme="dark"] {
+  --app-bg:        #16120c;
+  --window-bg:     #1e1810;
+  --surface:       #251f16;
+  --surface-2:     #1c1710;
+  --sidebar-bg:    rgba(28, 23, 15, 0.78);
+  --titlebar-bg:   rgba(30, 24, 16, 0.86);
+
+  --text:          #ece2cf;
+  --text-soft:     #b6a684;
+  --text-faint:    #85765d;
+  --hairline:      #352c1e;
+  --hairline-soft: #2b2318;
+
+  /* Muted savannah-dusk pigments — lower chroma so nothing glows */
+  --acacia:      #c39a52;  /* warm honey, not electric gold */
+  --acacia-deep: #9c7735;
+  --acacia-soft: #3a2f19;
+  --sage:        #8a9463;
+  --sage-deep:   #6d7749;
+  --sage-soft:   #2b3120;
+  --clay:        #c07a55;
+  --clay-soft:   #392418;
+  --plum:        #a07a80;
+
+  --ok:      #8a9463;
+  --warn:    #c39a52;
+  --urgent:  #c07a55;
+  --info:    #86a0a8;
+
+  --ok-bg:   #2a3020;
+  --warn-bg: #332a17;
+  --urgent-bg:#34231a;
+  --info-bg: #222b2d;
+
+  /* Dark shadows read as depth, not glow */
+  --sh-window: 0 24px 60px -14px rgba(0, 0, 0, 0.66), 0 6px 18px -8px rgba(0, 0, 0, 0.5);
+  --sh-1: 0 1px 2px rgba(0,0,0,0.45);
+  --sh-2: 0 2px 8px -3px rgba(0,0,0,0.5);
+  --sh-3: 0 14px 30px -12px rgba(0,0,0,0.62);
+  /* Matte focus ring — subtle, no bloom */
+  --ring: 0 0 0 2px rgba(195, 154, 82, 0.32);
+}
+
+/* ------------------------------------------------------------
+   Dark de-glow: flatten the treatments that read as "neon"
+   ------------------------------------------------------------ */
+:root[data-theme="dark"] .btn-primary,
+:root[data-theme="dark"] .nav-item[aria-current="page"] {
+  background: color-mix(in srgb, var(--acacia) 26%, var(--surface)) !important;
+  color: var(--text) !important;
+  border-color: color-mix(in srgb, var(--acacia) 42%, transparent) !important;
+  text-shadow: none !important;
+  box-shadow: var(--sh-1) !important;
+}
+:root[data-theme="dark"] .btn-primary:hover {
+  background: color-mix(in srgb, var(--acacia) 34%, var(--surface)) !important;
+}
+:root[data-theme="dark"] .brand .mark,
+:root[data-theme="dark"] .mod-ico,
+:root[data-theme="dark"] .stat .ico {
+  background: color-mix(in srgb, var(--acacia) 20%, var(--surface)) !important;
+  color: var(--acacia) !important;
+  box-shadow: none;
+}
+:root[data-theme="dark"] .stepper .node.current .dot { box-shadow: 0 0 0 3px var(--acacia-soft); }
+:root[data-theme="dark"] .avatar { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }

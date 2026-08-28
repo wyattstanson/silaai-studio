@@ -1,0 +1,81 @@
+/* ============================================================
+   Silai — macOS Dock (magnify + hover tooltips)
+   ============================================================ */
+.dock-wrap {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 50;
+  pointer-events: none;
+}
+.dock {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--titlebar-bg) 92%, transparent);
+  backdrop-filter: blur(26px) saturate(1.5);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--sh-3), inset 0 1px 0 rgba(255,255,255,0.22);
+}
+:root[data-theme="dark"] .dock { box-shadow: var(--sh-3), inset 0 1px 0 rgba(255,255,255,0.05); }
+
+.dock .sep { width: 1px; align-self: stretch; margin: 6px 4px; background: var(--hairline); }
+
+.dock-item {
+  position: relative;
+  width: 44px; height: 44px;
+  border: none; background: transparent; cursor: pointer;
+  display: grid; place-items: center;
+  border-radius: 12px;
+  transition: transform .2s var(--ease);
+  transform-origin: bottom center;
+}
+.dock-ico {
+  width: 40px; height: 40px; border-radius: 11px;
+  display: grid; place-items: center; color: var(--text-soft);
+  background: linear-gradient(160deg, var(--surface), var(--surface-2));
+  border: 1px solid var(--hairline);
+  box-shadow: var(--sh-1);
+  transition: box-shadow .2s var(--ease), color .2s;
+}
+.dock-item[data-tone="accent"] .dock-ico { color: var(--acacia-deep); background: linear-gradient(160deg, color-mix(in srgb, var(--acacia) 18%, var(--surface)), var(--surface-2)); }
+.dock-item[data-tone="sage"] .dock-ico   { color: var(--sage-deep); background: linear-gradient(160deg, color-mix(in srgb, var(--sage) 18%, var(--surface)), var(--surface-2)); }
+.dock-item[data-tone="clay"] .dock-ico   { color: var(--clay); background: linear-gradient(160deg, color-mix(in srgb, var(--clay) 16%, var(--surface)), var(--surface-2)); }
+:root[data-theme="dark"] .dock-item[data-tone="accent"] .dock-ico { color: var(--acacia); }
+:root[data-theme="dark"] .dock-item[data-tone="sage"] .dock-ico { color: var(--sage); }
+
+/* Magnify: hovered grows, immediate neighbours grow a little */
+.dock-item:hover { transform: scale(1.42) translateY(-10px); }
+.dock-item:hover + .dock-item,
+.dock-item:has(+ .dock-item:hover) { transform: scale(1.18) translateY(-4px); }
+.dock-item:hover .dock-ico { box-shadow: var(--sh-3); }
+
+/* running / active dot */
+.dock-item .run {
+  position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px; border-radius: 50%; background: var(--text-soft); opacity: 0;
+  transition: opacity .2s;
+}
+.dock-item[aria-current="page"] .run { opacity: 1; background: var(--acacia); }
+
+/* tooltip */
+.dock-item .tip {
+  position: absolute; bottom: calc(100% + 14px); left: 50%; transform: translateX(-50%) translateY(4px);
+  padding: 5px 10px; border-radius: 8px; white-space: nowrap;
+  background: var(--bark-900); color: var(--bone-50); font-size: 12px; font-weight: 550;
+  box-shadow: var(--sh-2); opacity: 0; pointer-events: none;
+  transition: opacity .16s var(--ease), transform .16s var(--ease);
+}
+:root[data-theme="dark"] .dock-item .tip { background: #0f0c07; color: var(--text); border: 1px solid var(--hairline); }
+.dock-item .tip::after {
+  content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 5px solid transparent; border-top-color: var(--bark-900);
+}
+:root[data-theme="dark"] .dock-item .tip::after { border-top-color: #0f0c07; }
+.dock-item:hover .tip { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 860px) { .dock-wrap { display: none; } }

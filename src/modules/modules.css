@@ -1,0 +1,126 @@
+/* Module-specific layout on top of ui + shell */
+
+/* ---- Deadline / list rows ----------------------------------- */
+.list { display: flex; flex-direction: column; }
+.list-row {
+  display: flex; align-items: center; gap: 13px;
+  padding: 12px 16px; border-bottom: 1px solid var(--hairline-soft);
+  cursor: pointer; transition: background .12s;
+}
+.list-row:last-child { border-bottom: none; }
+.list-row:hover { background: color-mix(in srgb, var(--acacia-soft) 34%, transparent); }
+.list-row .grow { flex: 1; min-width: 0; }
+.list-row .title { font-weight: 600; font-size: 14px; }
+.list-row .sub { font-size: 12.5px; color: var(--text-soft); margin-top: 2px; display: flex; gap: 8px; align-items: center; }
+.list-row .flag, .flag { color: var(--clay); display: inline-flex; align-items: center; vertical-align: -2px; }
+
+/* ---- Stage stepper ------------------------------------------ */
+.stepper { display: flex; align-items: center; gap: 0; margin: 4px 0 2px; }
+.stepper .node { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; position: relative; }
+.stepper .node .dot {
+  width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--surface-2); border: 1.5px solid var(--hairline); color: var(--text-faint);
+  font-size: 11px; font-weight: 700; z-index: 1;
+}
+.stepper .node.done .dot { background: var(--sage); border-color: var(--sage-deep); color: #fff; }
+.stepper .node.current .dot { background: var(--acacia); border-color: var(--acacia-deep); color: #fff; box-shadow: 0 0 0 4px var(--acacia-soft); }
+.stepper .node .lbl { font-size: 11px; color: var(--text-soft); font-weight: 550; }
+.stepper .node.current .lbl { color: var(--text); font-weight: 650; }
+.stepper .bar { position: absolute; top: 11px; left: 50%; width: 100%; height: 2px; background: var(--hairline); z-index: 0; }
+.stepper .node.done .bar { background: var(--sage); }
+
+/* ---- Detail sheet bits -------------------------------------- */
+.kv { display: grid; grid-template-columns: 116px 1fr; gap: 6px 14px; font-size: 13.5px; }
+.kv dt { color: var(--text-faint); font-weight: 550; }
+.kv dd { margin: 0; color: var(--text); }
+.pay-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--hairline); font-size: 13px; }
+.pay-row:last-child { border-bottom: none; }
+.pay-amt { margin-left: auto; font-weight: 650; font-variant-numeric: tabular-nums; }
+.sample {
+  width: 46px; height: 46px; border-radius: 10px; display: grid; place-items: center; font-size: 22px;
+  background: var(--surface-2); border: 1px solid var(--hairline); flex: none;
+}
+
+/* ---- Customers ---------------------------------------------- */
+.fam-card { overflow: hidden; }
+.fam-hd {
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--acacia-soft) 40%, var(--surface)), var(--surface));
+  border-bottom: 1px solid var(--hairline-soft);
+}
+.fam-hd .who { line-height: 1.2; }
+.fam-hd .who b { font-size: 15px; }
+.fam-hd .who span { font-size: 12.5px; color: var(--text-soft); }
+.cust-row { display: flex; align-items: center; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--hairline-soft); cursor: pointer; }
+.cust-row:last-child { border-bottom: none; }
+.cust-row:hover { background: color-mix(in srgb, var(--acacia-soft) 30%, transparent); }
+.chip { font-size: 11.5px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--hairline); color: var(--text-soft); }
+
+.meas-card { padding: 12px 14px; border: 1px solid var(--hairline); border-radius: var(--r-md); background: var(--surface-2); }
+.meas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; margin-top: 8px; }
+.meas-cell { background: var(--surface); border: 1px solid var(--hairline); border-radius: 8px; padding: 7px 9px; }
+.meas-cell .m-lbl { font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; }
+.meas-cell .m-val { font-size: 15px; font-weight: 600; font-family: var(--font-display); }
+
+/* ---- Reports ------------------------------------------------ */
+.bar-row { display: grid; grid-template-columns: 120px 1fr 54px; align-items: center; gap: 12px; padding: 7px 0; font-size: 13px; }
+.bar-track { height: 12px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 999px; }
+.report-num { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+
+/* ---- Modules ------------------------------------------------ */
+.mod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); gap: 14px; }
+.mod-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; position: relative; }
+.mod-card .mod-ico { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; background: var(--acacia-soft); color: var(--acacia-deep); }
+:root[data-theme="dark"] .mod-card .mod-ico { color: var(--acacia); }
+.mod-card.off { opacity: 0.72; }
+.mod-card h4 { font-size: 15.5px; }
+.mod-card .mod-desc { font-size: 12.5px; color: var(--text-soft); line-height: 1.45; flex: 1; }
+
+/* ---- Toggle switch (macOS) ---------------------------------- */
+.switch { position: relative; width: 40px; height: 24px; flex: none; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch .track {
+  position: absolute; inset: 0; border-radius: 999px; background: var(--sand-400);
+  transition: background .18s var(--ease); cursor: pointer;
+}
+.switch .knob {
+  position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; box-shadow: var(--sh-1); transition: transform .18s var(--ease);
+}
+.switch input:checked + .track { background: var(--sage); }
+.switch input:checked + .track .knob { transform: translateX(16px); }
+.switch input:disabled + .track { opacity: 0.6; cursor: not-allowed; }
+
+/* ---- Admin virtualized customer grid ----------------------- */
+.cust-grid {
+  display: grid;
+  grid-template-columns: 2.2fr 1.5fr 1.4fr 0.6fr 1fr 1fr 34px;
+  align-items: center; gap: 12px; padding: 0 16px;
+}
+.cust-head {
+  height: 40px; border-bottom: 1px solid var(--hairline);
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-faint); font-weight: 600;
+}
+.cust-r { height: 100%; border-bottom: 1px solid var(--hairline-soft); cursor: pointer; font-size: 13.5px; transition: background .1s; }
+.cust-r:hover { background: color-mix(in srgb, var(--acacia-soft) 40%, transparent); }
+.ellip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---- Customer admin window --------------------------------- */
+.ca { padding: 16px; display: grid; gap: 16px; }
+.ca-head { display: flex; align-items: center; gap: 12px; }
+.ca-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.ca-stats > div { background: var(--surface-2); border: 1px solid var(--hairline); border-radius: var(--r-md); padding: 10px 12px; }
+.ca-stats .k { font-size: 11px; color: var(--text-faint); display: block; }
+.ca-stats b { font-family: var(--font-display); font-size: 18px; font-weight: 600; }
+.ca-sec { display: block; }
+.ca-sec .eyebrow { display: block; }
+
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.search {
+  display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: var(--r-sm);
+  background: var(--surface); border: 1px solid var(--hairline); box-shadow: inset 0 1px 2px rgba(58,45,28,0.04);
+  min-width: 220px;
+}
+.search input { border: none; background: transparent; outline: none; font-size: 13.5px; width: 100%; color: var(--text); }

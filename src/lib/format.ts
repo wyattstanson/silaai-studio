@@ -1,0 +1,38 @@
+import type { Order, Payment } from "../data/types";
+
+export const inr = (n: number) =>
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
+
+export const fmtDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+
+export const fmtDay = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+
+export const paid = (o: Order) =>
+  o.payments.reduce((s, p) => s + (p.kind === "refund" ? -p.amount : p.amount), 0);
+
+export const balance = (o: Order) => Math.max(0, o.price - paid(o));
+
+/** Whole days from today until the given date (negative = overdue). */
+export function daysUntil(iso: string): number {
+  const a = new Date(); a.setHours(0, 0, 0, 0);
+  const b = new Date(iso); b.setHours(0, 0, 0, 0);
+  return Math.round((b.getTime() - a.getTime()) / 86_400_000);
+}
+
+export function dueLabel(iso: string): string {
+  const d = daysUntil(iso);
+  if (d < 0) return `${Math.abs(d)}d overdue`;
+  if (d === 0) return "Due today";
+  if (d === 1) return "Due tomorrow";
+  return `${d}d left`;
+}
+
+/** Measurements older than ~2 months want a refresh (from the notes). */
+export function measurementStale(iso: string): boolean {
+  return daysUntil(iso) < -60;
+}
+
+export const sumPayments = (ps: Payment[]) =>
+  ps.reduce((s, p) => s + (p.kind === "refund" ? -p.amount : p.amount), 0);

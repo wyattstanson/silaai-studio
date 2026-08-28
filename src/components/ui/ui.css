@@ -1,0 +1,163 @@
+/* ============================================================
+   Silai — UI primitives (Savannah + macOS)
+   ============================================================ */
+
+/* ---- Card ---------------------------------------------------- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-2);
+}
+.card-pad { padding: 18px; }
+.card-hd {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 18px; border-bottom: 1px solid var(--hairline-soft);
+}
+.card-hd h3 { font-size: 16px; }
+
+/* ---- Section title ------------------------------------------ */
+.eyebrow {
+  font-family: var(--font-ui); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.10em; text-transform: uppercase; color: var(--text-faint);
+}
+
+/* ---- Buttons ------------------------------------------------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px; justify-content: center;
+  font-size: 13px; font-weight: 550; line-height: 1;
+  padding: 9px 14px; border-radius: var(--r-sm); cursor: pointer;
+  border: 1px solid var(--hairline); background: var(--surface); color: var(--text);
+  box-shadow: var(--sh-1); transition: transform .12s var(--ease), background .15s, border-color .15s, box-shadow .15s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface-2); }
+.btn:active { transform: translateY(0.5px) scale(0.99); }
+.btn:focus-visible { outline: none; box-shadow: var(--ring); }
+.btn-primary {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--acacia) 92%, white), var(--acacia));
+  border-color: var(--acacia-deep); color: #fff8ea; text-shadow: 0 1px 0 rgba(90,60,10,0.25);
+}
+.btn-primary:hover { background: linear-gradient(180deg, var(--acacia), var(--acacia-deep)); }
+.btn-ghost { background: transparent; border-color: transparent; box-shadow: none; }
+.btn-ghost:hover { background: color-mix(in srgb, var(--bark-600) 10%, transparent); }
+.btn-danger { color: var(--urgent); border-color: color-mix(in srgb, var(--urgent) 40%, var(--hairline)); }
+.btn-danger:hover { background: var(--urgent-bg); }
+.btn-sm { padding: 6px 10px; font-size: 12px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---- Badges / pills ----------------------------------------- */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 600; letter-spacing: 0.01em;
+  padding: 3px 9px; border-radius: var(--r-pill);
+  background: var(--surface-2); color: var(--text-soft);
+  border: 1px solid var(--hairline);
+}
+.badge .dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+.badge-ok      { background: var(--ok-bg);     color: var(--sage-deep);  border-color: transparent; }
+.badge-warn    { background: var(--warn-bg);   color: var(--acacia-deep);border-color: transparent; }
+.badge-urgent  { background: var(--urgent-bg); color: var(--clay);       border-color: transparent; }
+.badge-info    { background: var(--info-bg);   color: var(--info);       border-color: transparent; }
+.badge-plum    { background: color-mix(in srgb, var(--plum) 15%, transparent); color: var(--plum); border-color: transparent; }
+
+/* ---- Stat card ---------------------------------------------- */
+.stat { display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; }
+.stat .lbl { font-size: 12px; color: var(--text-soft); font-weight: 550; display: flex; align-items: center; gap: 7px; }
+.stat .val { font-family: var(--font-display); font-size: 30px; font-weight: 500; line-height: 1; color: var(--text); }
+.stat .sub { font-size: 12px; color: var(--text-faint); }
+.stat .ico {
+  width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center;
+  font-size: 14px; background: var(--acacia-soft); color: var(--acacia-deep);
+}
+
+/* ---- Segmented control (macOS) ------------------------------- */
+.seg {
+  display: inline-flex; padding: 3px; gap: 2px; border-radius: var(--r-sm);
+  background: var(--surface-2); border: 1px solid var(--hairline);
+}
+.seg button {
+  border: none; background: transparent; color: var(--text-soft);
+  font-size: 12.5px; font-weight: 550; padding: 5px 12px; border-radius: 5px; cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.seg button:hover { color: var(--text); }
+.seg button[aria-pressed="true"] {
+  background: var(--surface); color: var(--text); box-shadow: var(--sh-1);
+}
+
+/* ---- Fields -------------------------------------------------- */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > label { font-size: 12px; font-weight: 600; color: var(--text-soft); }
+.input, .select, .textarea {
+  width: 100%; font-size: 13.5px; color: var(--text);
+  padding: 9px 11px; border-radius: var(--r-sm);
+  background: var(--surface); border: 1px solid var(--hairline); box-shadow: inset 0 1px 2px rgba(58,45,28,0.04);
+  transition: border-color .15s, box-shadow .15s;
+}
+.input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--acacia); box-shadow: var(--ring); }
+.textarea { resize: vertical; min-height: 66px; line-height: 1.5; }
+
+/* ---- Table --------------------------------------------------- */
+.tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.tbl thead th {
+  text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-faint); padding: 10px 14px; border-bottom: 1px solid var(--hairline);
+}
+.tbl tbody td { padding: 12px 14px; border-bottom: 1px solid var(--hairline-soft); vertical-align: middle; }
+.tbl tbody tr { transition: background .12s; cursor: default; }
+.tbl tbody tr:hover { background: color-mix(in srgb, var(--acacia-soft) 40%, transparent); }
+.tbl tbody tr:last-child td { border-bottom: none; }
+.tbl .mono { font-variant-numeric: tabular-nums; }
+
+/* ---- Avatar -------------------------------------------------- */
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 13px; font-weight: 600; color: #fff;
+  background: linear-gradient(150deg, var(--clay-500), var(--bark-600));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
+  flex: none;
+}
+
+/* ---- Progress rail ------------------------------------------ */
+.rail { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.rail > span { display: block; height: 100%; border-radius: 999px; background: var(--acacia); }
+
+/* ---- Modal (macOS sheet) ------------------------------------ */
+.scrim {
+  position: fixed; inset: 0; background: rgba(42, 33, 23, 0.34);
+  backdrop-filter: blur(3px); display: grid; place-items: center; z-index: 60;
+  animation: fade .16s var(--ease);
+  padding: 24px;
+}
+.sheet {
+  width: min(560px, 100%); max-height: 88vh; overflow: auto;
+  background: var(--window-bg); border: 1px solid var(--hairline);
+  border-radius: var(--r-lg); box-shadow: var(--sh-window);
+  animation: pop .2s var(--ease);
+}
+.sheet-hd { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--hairline-soft); }
+.sheet-hd h3 { font-size: 17px; }
+.sheet-bd { padding: 18px; display: grid; gap: 14px; }
+.sheet-ft { padding: 14px 18px; border-top: 1px solid var(--hairline-soft); display: flex; justify-content: flex-end; gap: 8px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+@keyframes fade { from { opacity: 0; } }
+@keyframes pop { from { opacity: 0; transform: translateY(8px) scale(0.985); } }
+
+/* ---- Empty state -------------------------------------------- */
+.empty {
+  display: grid; place-items: center; gap: 8px; text-align: center;
+  padding: 48px 20px; color: var(--text-faint);
+}
+.empty .big { color: var(--text-faint); opacity: 0.85; display: grid; place-items: center; }
+.empty .big svg { width: 30px; height: 30px; }
+
+/* ---- Misc helpers ------------------------------------------- */
+.row { display: flex; align-items: center; gap: 10px; }
+.col { display: flex; flex-direction: column; }
+.wrap { flex-wrap: wrap; }
+.muted { color: var(--text-soft); }
+.faint { color: var(--text-faint); }
+.spacer { flex: 1; }
+.tnum { font-variant-numeric: tabular-nums; }

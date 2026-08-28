@@ -1,0 +1,43 @@
+/* Floating windows — draggable, resizable, shade + maximise */
+.fwin {
+  position: absolute;
+  display: flex; flex-direction: column;
+  background: var(--window-bg);
+  border: 1px solid color-mix(in srgb, var(--bark-800) 24%, var(--hairline));
+  border-radius: 12px;
+  box-shadow: var(--sh-window);
+  overflow: hidden;
+  min-width: 320px;
+}
+.fwin-bar {
+  display: flex; align-items: center; gap: 12px; padding: 0 12px; height: 40px; flex: none;
+  background: var(--titlebar-bg);
+  backdrop-filter: blur(16px) saturate(1.4);
+  border-bottom: 1px solid var(--hairline);
+  cursor: grab; -webkit-user-select: none; user-select: none;
+}
+.fwin.maxed .fwin-bar { cursor: default; }
+.fwin-bar:active { cursor: grabbing; }
+.fwin-bar .traffic { display: flex; gap: 8px; }
+.fwin-bar .traffic button {
+  width: 12px; height: 12px; border-radius: 50%; border: none; padding: 0; cursor: pointer;
+  box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.18); display: grid; place-items: center; color: rgba(60,20,10,0.55);
+}
+.fwin-bar .traffic button svg { opacity: 0; transition: opacity .12s; }
+.fwin-bar .traffic:hover button svg { opacity: 1; }
+.fwin-bar .traffic .r { background: var(--tl-red); }
+.fwin-bar .traffic .y { background: var(--tl-yellow); }
+.fwin-bar .traffic .g { background: var(--tl-green); }
+.fwin-title { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.fwin-title b { font-size: 13px; font-weight: 650; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fwin-title .fwin-sub { font-size: 12px; color: var(--text-faint); white-space: nowrap; }
+.fwin-body { flex: 1; overflow-y: auto; overflow-x: hidden; }
+.fwin-resize {
+  position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, color-mix(in srgb, var(--bark-600) 35%, transparent) 50% 62%, transparent 62%);
+}
+
+@media (max-width: 920px) {
+  .fwin { left: 8px !important; top: 40px !important; width: calc(100vw - 16px) !important; height: calc(100vh - 120px) !important; }
+  .fwin-resize { display: none; }
+}
