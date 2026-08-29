@@ -1,0 +1,188 @@
+// ============================================================
+// Silai — data model (PostgreSQL, serverless-friendly)
+// Pooled DATABASE_URL for the app, DIRECT_URL for migrations.
+// Indexed for the access patterns the app actually uses.
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  OWNER
+  MEMBER
+}
+
+enum OrderKind {
+  STITCHING
+  SALE
+  WEDDING
+}
+
+enum OrderStage {
+  NEW
+  CUTTING
+  STITCHING
+  READY
+  DELIVERED
+}
+
+enum MaterialSource {
+  SHOP
+  OUTSIDE
+}
+
+enum Fulfilment {
+  LOCAL
+  OUTSIDE
+}
+
+enum PaymentKind {
+  ADVANCE
+  BALANCE
+  REFUND
+}
+
+enum PaymentMethod {
+  CASH
+  UPI
+  CARD
+}
+
+enum ActivityType {
+  SIGNUP
+  LOGIN
+  ORDER_PLACED
+  STAGE
+  PAYMENT
+  MEASUREMENT
+  CUSTOMER_ADDED
+  FAMILY_ADDED
+  CUSTOMER_UPDATED
+  CUSTOMER_REMOVED
+}
+
+model Family {
+  id        String     @id @default(cuid())
+  name      String
+  phone     String
+  note      String?
+  createdAt DateTime   @default(now())
+  customers Customer[]
+  users     User[]
+
+  @@index([phone])
+  @@index([name])
+}
+
+model User {
+  id        String    @id @default(cuid())
+  phone     String    @unique
+  name      String
+  role      Role      @default(MEMBER)
+  familyId  String?
+  family    Family?   @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  createdAt DateTime  @default(now())
+  lastLogin DateTime?
+
+  @@index([familyId])
+}
+
+model Customer {
+  id           String        @id @default(cuid())
+  code         String        @unique // CUS-0001
+  familyId     String
+  family       Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  name         String
+  phone        String?
+  gender       String?       @db.VarChar(4)
+  createdAt    DateTime      @default(now())
+  measurements Measurement[]
+  orders       Order[]
+
+  @@index([familyId])
+  @@index([name])
+  @@index([phone])
+  @@index([createdAt])
+}
+
+model Measurement {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  takenAt    DateTime @default(now())
+  garment    String
+  values     Json // [{ label, value }]
+  note       String?
+
+  @@index([customerId])
+}
+
+model Order {
+  id             String         @id @default(cuid())
+  code           String         @unique // S-42
+  customerId     String
+  customer       Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  kind           OrderKind
+  garment        String
+  materialSource MaterialSource
+  fulfilment     Fulfilment
+  design         String?
+  material       String?
+  samplePhoto    String?
+  qty            Int            @default(1)
+  stage          OrderStage     @default(NEW)
+  deadline       Boolean        @default(false)
+  placedAt       DateTime       @default(now())
+  deliveryDate   DateTime
+  price          Int // whole rupees
+  remarks        String?
+  payments       Payment[]
+
+  @@index([customerId])
+  @@index([stage])
+  @@index([deliveryDate])
+  @@index([deadline])
+}
+
+model Payment {
+  id      String        @id @default(cuid())
+  orderId String
+  order   Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  at      DateTime      @default(now())
+  kind    PaymentKind
+  amount  Int
+  method  PaymentMethod @default(UPI)
+  note    String?
+
+  @@index([orderId])
+}
+
+model Activity {
+  id         String       @id @default(cuid())
+  at         DateTime     @default(now())
+  type       ActivityType
+  summary    String
+  familyId   String?
+  customerId String?
+  orderId    String?
+  amount     Int?
+  actor      String?
+
+  @@index([familyId])
+  @@index([customerId])
+  @@index([orderId])
+  @@index([at])
+}
+
+// Monotonic counters so human codes (CUS-0001, S-42) stay unique at scale.
+model Counter {
+  name  String @id
+  value Int    @default(0)
+}

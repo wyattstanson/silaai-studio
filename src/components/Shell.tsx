@@ -59,7 +59,7 @@ export function Shell({
   canManage?: boolean;
   renderWindow?: (win: WinState) => ReactNode;
 }) {
-  const { db, user, theme, toggleTheme } = useStore();
+  const { db, user, theme, toggleTheme, mode } = useStore();
   const { pos, setPos, onDown } = useDrag(null);
   const [maximized, setMaximized] = useState(false);
 
@@ -105,6 +105,9 @@ export function Shell({
         <span className="mb-item">{crumb}</span>
         <span className="grow" />
         <div className="mb-right">
+          <span className="mb-mode" data-mode={mode} title={mode === "online" ? "Connected to database" : mode === "offline" ? "Offline — saved on this device" : "Connecting…"}>
+            <i className="mm-dot" />{mode === "online" ? "Synced" : mode === "offline" ? "Offline" : "…"}
+          </span>
           {user && <span>{user.name} · {user.role === "owner" ? "Owner" : "Member"}</span>}
           <button className="mb-btn" onClick={toggleTheme} title="Toggle appearance">
             <Icon name={theme === "light" ? "moon" : "sun"} size={15} />

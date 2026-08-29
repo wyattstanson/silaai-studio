@@ -1,8 +1,13 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type {
   ActivityEvent, ActivityType, Customer, DB, Family, Measurement, ModuleDef, Order, OrderStage, Payment, User,
 } from "./types";
 import { seed } from "./seed";
+import { api as backend } from "./api";
+import {
+  bootstrapDb, customerCreate, customerPatch, orderCreate, orderPatch,
+  paymentCreate, measurementCreate, stageUp, type Refs,
+} from "./remote";
 
 const KEY = "silai.db.v3";
 const SESSION_KEY = "silai.session";
@@ -13,7 +18,6 @@ function load(): DB {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as DB;
-      // guard against older shapes
       if (parsed.users && parsed.activity) return parsed;
     }
   } catch { /* fall through to seed */ }
@@ -23,20 +27,22 @@ function load(): DB {
 const uid = (p: string) => `${p}-${Math.random().toString(36).slice(2, 7)}`;
 const pad = (n: number) => String(n).padStart(4, "0");
 const normPhone = (p: string) => p.replace(/\s+/g, "").replace(/[^\d+]/g, "");
+const warn = (e: unknown) => console.warn("[silai] sync failed:", e);
+
+export type Mode = "connecting" | "online" | "offline";
 
 interface Store {
   db: DB;
   user: User | null;
   theme: "light" | "dark";
+  mode: Mode;
   toggleTheme: () => void;
   resetData: () => void;
 
-  // auth
   login: (phone: string) => User | null;
   signup: (name: string, phone: string) => User;
   logout: () => void;
 
-  // data
   addFamily: (f: Omit<Family, "id" | "createdAt">) => Family;
   addCustomer: (c: Omit<Customer, "id" | "createdAt" | "measurements">) => Customer;
   updateCustomer: (id: string, patch: Partial<Customer>) => void;
@@ -63,6 +69,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<"light" | "dark">(
     () => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
   );
+  const [mode, setMode] = useState<Mode>("connecting");
+  const refs = useRef<Refs>({ customer: {}, order: {} });
+
+  // Try the API once on mount. If a database is reachable, hydrate from it and
+  // switch to online (writes mirror to the server). Otherwise stay offline on
+  // localStorage — the app is fully functional either way.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const health = await backend.health();
+        if (!alive) return;
+        if (!health.db) { setMode("offline"); return; }
+        const { db: remote, refs: r } = await bootstrapDb();
+        if (!alive) return;
+        refs.current = r;
+        setDb(remote);
+        setMode("online");
+      } catch {
+        if (alive) setMode("offline");
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
 
   useEffect(() => { localStorage.setItem(KEY, JSON.stringify(db)); }, [db]);
   useEffect(() => {
@@ -76,13 +106,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const user = useMemo(() => db.users.find(u => normPhone(u.phone) === normPhone(phone ?? "")) ?? null, [db.users, phone]);
 
-  const api = useMemo<Store>(() => {
+  const store = useMemo<Store>(() => {
+    const online = mode === "online";
+    const R = refs.current;
     const log = (e: Omit<ActivityEvent, "id" | "at">) =>
       setDb(d => ({ ...d, activity: [{ ...e, id: uid("A"), at: new Date().toISOString() }, ...d.activity] }));
     const actor = () => user?.name ?? "Studio";
 
     return {
-      db, user, theme,
+      db, user, theme, mode,
       toggleTheme: () => setTheme(t => (t === "light" ? "dark" : "light")),
       resetData: () => { setDb(seed()); setPhone(null); },
 
@@ -108,6 +140,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           activity: [{ id: uid("A"), at: new Date().toISOString(), type: "signup" as ActivityType, summary: `${name} created an account`, familyId: fam.id, customerId: cus.id, actor: name }, ...d.activity],
         }));
         setPhone(p);
+        if (online) backend.signup(name, p).then((res: any) => {
+          if (res?.customer?.id) R.customer[cus.id] = res.customer.id;
+          if (res?.family?.id) setDb(d => ({ ...d, families: d.families.map(f => f.id === fam.id ? { ...f, id: res.family.id } : f) }));
+        }).catch(warn);
         return usr;
       },
       logout: () => setPhone(null),
@@ -116,29 +152,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const fam: Family = { ...f, id: uid("FAM"), createdAt: new Date().toISOString() };
         setDb(d => ({ ...d, families: [...d.families, fam] }));
         log({ type: "family_added", summary: `Added family ${fam.name}`, familyId: fam.id, actor: actor() });
+        if (online) backend.families.create({ name: fam.name, phone: fam.phone, note: fam.note })
+          .then((srv: any) => setDb(d => ({ ...d, families: d.families.map(x => x.id === fam.id ? { ...x, id: srv.id } : x) })))
+          .catch(warn);
         return fam;
       },
       addCustomer: (c) => {
         const cus: Customer = { ...c, id: `CUS-${pad(db.customers.length + 1)}`, createdAt: new Date().toISOString(), measurements: [] };
         setDb(d => ({ ...d, customers: [...d.customers, cus] }));
         log({ type: "customer_added", summary: `Added member ${cus.name}`, familyId: cus.familyId, customerId: cus.id, actor: actor() });
+        if (online) backend.customers.create(customerCreate(c)).then((srv: any) => { R.customer[cus.id] = srv.id; }).catch(warn);
         return cus;
       },
       updateCustomer: (id, patch) => {
         const c = db.customers.find(x => x.id === id);
         setDb(d => ({ ...d, customers: d.customers.map(x => x.id === id ? { ...x, ...patch } : x) }));
         if (c) log({ type: "customer_added", summary: `Updated ${patch.name ?? c.name}'s details`, familyId: c.familyId, customerId: id, actor: actor() });
+        if (online && R.customer[id]) backend.customers.update(R.customer[id], customerPatch(patch)).catch(warn);
       },
       updateFamily: (id, patch) =>
         setDb(d => ({ ...d, families: d.families.map(x => x.id === id ? { ...x, ...patch } : x) })),
       deleteCustomer: (id) => {
         const c = db.customers.find(x => x.id === id);
-        setDb(d => ({
-          ...d,
-          customers: d.customers.filter(x => x.id !== id),
-          orders: d.orders.filter(o => o.customerId !== id),
-        }));
+        setDb(d => ({ ...d, customers: d.customers.filter(x => x.id !== id), orders: d.orders.filter(o => o.customerId !== id) }));
         if (c) log({ type: "customer_added", summary: `Removed ${c.name} from records`, familyId: c.familyId, actor: actor() });
+        if (online && R.customer[id]) { backend.customers.remove(R.customer[id]).catch(warn); delete R.customer[id]; }
       },
       generateDemoCustomers: (n) => setDb(d => {
         const firsts = ["Aarav", "Vivaan", "Diya", "Anaya", "Kabir", "Myra", "Reyansh", "Aisha", "Ishaan", "Sara", "Arjun", "Kiara", "Vihaan", "Riya", "Advait", "Zara", "Rohan", "Tara", "Neha", "Aditya"];
@@ -150,10 +188,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           const idx = startIdx + i;
           const last = lasts[idx % lasts.length];
           const first = firsts[(idx * 7) % firsts.length];
-          const phone = "+91 " + (60000 + (idx % 39999)).toString() + " " + String(10000 + (idx * 13) % 89999);
-          if (i % 3 === 0) fams.push({ id: `FAM-D${idx}`, name: `${last} Household`, phone, createdAt: new Date().toISOString() });
+          const ph = "+91 " + (60000 + (idx % 39999)).toString() + " " + String(10000 + (idx * 13) % 89999);
+          if (i % 3 === 0) fams.push({ id: `FAM-D${idx}`, name: `${last} Household`, phone: ph, createdAt: new Date().toISOString() });
           const famId = fams.length ? fams[fams.length - 1].id : `FAM-D${idx}`;
-          custs.push({ id: `CUS-D${idx}`, familyId: famId, name: `${first} ${last}`, phone, gender: idx % 2 ? "F" : "M", createdAt: new Date(Date.now() - (idx % 400) * 86400000).toISOString(), measurements: [] });
+          custs.push({ id: `CUS-D${idx}`, familyId: famId, name: `${first} ${last}`, phone: ph, gender: idx % 2 ? "F" : "M", createdAt: new Date(Date.now() - (idx % 400) * 86400000).toISOString(), measurements: [] });
         }
         return { ...d, families: [...d.families, ...fams], customers: [...d.customers, ...custs] };
       }),
@@ -165,11 +203,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       })),
       addMeasurement: (customerId, m) => {
         const c = db.customers.find(x => x.id === customerId);
-        setDb(d => ({
-          ...d,
-          customers: d.customers.map(c => c.id === customerId ? { ...c, measurements: [{ ...m, id: uid("M") }, ...c.measurements] } : c),
-        }));
+        setDb(d => ({ ...d, customers: d.customers.map(c => c.id === customerId ? { ...c, measurements: [{ ...m, id: uid("M") }, ...c.measurements] } : c) }));
         log({ type: "measurement", summary: `New measurement recorded, ${m.garment}`, familyId: c?.familyId, customerId, actor: actor() });
+        if (online && R.customer[customerId]) backend.customers.addMeasurement(R.customer[customerId], measurementCreate(m)).catch(warn);
       },
 
       addOrder: (o) => {
@@ -178,14 +214,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const c = db.customers.find(x => x.id === o.customerId);
         setDb(d => ({ ...d, orders: [ord, ...d.orders] }));
         log({ type: "order_placed", summary: `Placed order for ${ord.garment} (${ord.code})`, familyId: c?.familyId, customerId: o.customerId, orderId: ord.id, actor: actor() });
+        if (online && R.customer[o.customerId]) {
+          backend.orders.create({ ...orderCreate(o), customerId: R.customer[o.customerId] })
+            .then((srv: any) => { R.order[ord.id] = srv.id; }).catch(warn);
+        }
         return ord;
       },
-      updateOrder: (id, patch) => setDb(d => ({ ...d, orders: d.orders.map(o => (o.id === id ? { ...o, ...patch } : o)) })),
+      updateOrder: (id, patch) => {
+        setDb(d => ({ ...d, orders: d.orders.map(o => (o.id === id ? { ...o, ...patch } : o)) }));
+        if (online && R.order[id]) backend.orders.update(R.order[id], orderPatch(patch)).catch(warn);
+      },
       setStage: (id, stage) => {
         const o = db.orders.find(x => x.id === id);
         const c = db.customers.find(x => x.id === o?.customerId);
         setDb(d => ({ ...d, orders: d.orders.map(o => (o.id === id ? { ...o, stage } : o)) }));
         if (o) log({ type: "stage", summary: `${o.garment} advanced to ${stage}`, familyId: c?.familyId, customerId: o.customerId, orderId: id, actor: actor() });
+        if (online && R.order[id]) backend.orders.setStage(R.order[id], stageUp(stage)).catch(warn);
       },
       addPayment: (orderId, p) => {
         const pay: Payment = { ...p, id: uid("P"), at: new Date().toISOString() };
@@ -193,15 +237,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const c = db.customers.find(x => x.id === o?.customerId);
         setDb(d => ({ ...d, orders: d.orders.map(o => (o.id === orderId ? { ...o, payments: [...o.payments, pay] } : o)) }));
         if (o) log({ type: "payment", summary: `${p.kind === "advance" ? "Advance" : p.kind === "refund" ? "Refund" : "Balance"}, ${o.garment}`, familyId: c?.familyId, customerId: o.customerId, orderId, amount: p.amount, actor: actor() });
+        if (online && R.order[orderId]) backend.orders.addPayment(R.order[orderId], paymentCreate(p)).catch(warn);
       },
 
       toggleModule: (id) => setDb(d => ({ ...d, modules: d.modules.map(m => (m.id === id ? { ...m, enabled: !m.enabled } : m)) })),
       addModule: (m) => setDb(d => ({ ...d, modules: [...d.modules, { ...m, core: false }] })),
       removeModule: (id) => setDb(d => ({ ...d, modules: d.modules.filter(m => m.id !== id || m.core) })),
     };
-  }, [db, user, theme]);
+  }, [db, user, theme, mode]);
 
-  return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }
 
 export function useStore() {
