@@ -62,8 +62,8 @@ export const api = {
     create: (data: unknown) => req<any>("/orders", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, patch: unknown) => req<any>(`/orders/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
     remove: (id: string) => req<{ deleted: string }>(`/orders/${id}`, { method: "DELETE" }),
-    setStage: (id: string, stage: string) => req<any>(`/orders/${id}/stage`, { method: "POST", body: JSON.stringify({ stage }) }),
-    addPayment: (id: string, p: unknown) => req<any>(`/orders/${id}/payment`, { method: "POST", body: JSON.stringify(p) }),
+    setStage: (id: string, stage: string) => req<any>(`/orders/${id}/action`, { method: "POST", body: JSON.stringify({ action: "stage", stage }) }),
+    addPayment: (id: string, p: unknown) => req<any>(`/orders/${id}/action`, { method: "POST", body: JSON.stringify({ action: "payment", ...(p as Record<string, unknown>) }) }),
   },
 
   families: {
@@ -74,6 +74,4 @@ export const api = {
   activity: {
     list: (p: { familyId?: string; customerId?: string; limit?: number; cursor?: string } = {}) => req<Cursor<any>>(`/activity?${qs(p)}`),
   },
-
-  stats: () => req<{ customers: number; families: number; billed: number; collected: number; outstanding: number }>("/stats"),
 };
