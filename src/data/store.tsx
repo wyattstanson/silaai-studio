@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type {
-  ActivityEvent, ActivityType, Customer, DB, Family, Measurement, ModuleDef, Order, OrderStage, Payment, User,
+  ActivityEvent, ActivityType, Customer, DB, Family, Measurement, ModuleDef, Order, OrderStage, Payment,
+  RequestStatus, ServiceRequest, User,
 } from "./types";
 import { seed } from "./seed";
 import { api as backend } from "./api";
@@ -18,7 +19,10 @@ function load(): DB {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as DB;
-      if (parsed.users && parsed.activity) return parsed;
+      if (parsed.users && parsed.activity) {
+        parsed.requests = parsed.requests ?? []; // migrate older caches
+        return parsed;
+      }
     }
   } catch { /* fall through to seed */ }
   return seed();
@@ -51,6 +55,8 @@ interface Store {
   generateDemoCustomers: (n: number) => void;
   clearDemoCustomers: () => void;
   addMeasurement: (customerId: string, m: Omit<Measurement, "id">) => void;
+  addRequest: (r: Omit<ServiceRequest, "id" | "code" | "status" | "createdAt" | "updatedAt" | "history">) => ServiceRequest;
+  setRequestStatus: (id: string, status: RequestStatus, note?: string) => void;
   addOrder: (o: Omit<Order, "id" | "code" | "payments" | "placedAt">) => Order;
   updateOrder: (id: string, patch: Partial<Order>) => void;
   setStage: (id: string, stage: OrderStage) => void;
@@ -206,6 +212,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setDb(d => ({ ...d, customers: d.customers.map(c => c.id === customerId ? { ...c, measurements: [{ ...m, id: uid("M") }, ...c.measurements] } : c) }));
         log({ type: "measurement", summary: `New measurement recorded, ${m.garment}`, familyId: c?.familyId, customerId, actor: actor() });
         if (online && R.customer[customerId]) backend.customers.addMeasurement(R.customer[customerId], measurementCreate(m)).catch(warn);
+      },
+
+      addRequest: (r) => {
+        const now = new Date().toISOString();
+        const req: ServiceRequest = { ...r, id: uid("REQ"), code: `REQ-${pad(db.requests.length + 1)}`, status: "submitted", createdAt: now, updatedAt: now, history: [{ at: now, status: "submitted" }] };
+        setDb(d => ({ ...d, requests: [req, ...d.requests] }));
+        log({ type: "customer_added", summary: `Requested ${r.type.replace(/_/g, " ")}`, familyId: r.familyId, customerId: r.customerId, actor: actor() });
+        return req;
+      },
+      setRequestStatus: (id, status, note) => {
+        const now = new Date().toISOString();
+        const rq = db.requests.find(x => x.id === id);
+        setDb(d => ({ ...d, requests: d.requests.map(x => x.id === id ? { ...x, status, updatedAt: now, history: [...x.history, { at: now, status, note }] } : x) }));
+        if (rq) log({ type: "customer_added", summary: `Request ${rq.code} ${status.replace(/_/g, " ")}`, familyId: rq.familyId, customerId: rq.customerId, actor: actor() });
       },
 
       addOrder: (o) => {

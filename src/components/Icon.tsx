@@ -9,7 +9,7 @@ export type IconName =
   | "measure" | "history" | "power" | "sun" | "moon"
   | "phone" | "mail" | "pin" | "spark" | "camera"
   | "back" | "plus" | "search" | "close" | "chevron"
-  | "flag" | "needle" | "hanger" | "check" | "clock";
+  | "flag" | "needle" | "hanger" | "check" | "clock" | "requests" | "calendar";
 
 const soft = { fill: "currentColor", opacity: 0.14, stroke: "none" } as const;
 
@@ -127,6 +127,16 @@ function glyph(name: IconName) {
     case "chevron": return (<><path d="M9 6l6 6-6 6" /></>);
     case "check": return (<><path d="M5 12.5 10 17 19 7" /></>);
     case "flag": return (<><path d="M6 21V4" /><path d="M6 5h10l-1.6 3L16 11H6z" {...soft} /><path d="M6 5h10l-1.6 3L16 11H6z" /></>);
+    case "requests": return (<>
+      <rect x="3.5" y="5" width="17" height="14" rx="2.4" {...soft} />
+      <rect x="3.5" y="5" width="17" height="14" rx="2.4" />
+      <path d="M3.5 13.5h5a3.5 3.5 0 0 0 7 0h5" />
+    </>);
+    case "calendar": return (<>
+      <rect x="3.5" y="5" width="17" height="15" rx="2.4" {...soft} />
+      <rect x="3.5" y="5" width="17" height="15" rx="2.4" />
+      <path d="M3.5 9.5h17M8 3.5v3M16 3.5v3" />
+    </>);
     default: return null;
   }
 }

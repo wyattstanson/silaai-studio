@@ -78,6 +78,7 @@ The store (`src/data/store.tsx`) is now hybrid:
 - **Auth stays local** (validated against the hydrated user list) even online; a new signup is also POSTed to the server. Full server-side login is a small follow-up.
 - The **demo-data generator** is local only.
 - `bootstrap` is capped (1000 customers / 2000 orders); past that, move the Admin console and lists onto the paginated endpoints (already built).
+- **Service requests** (customer requests: stitching, pickup, fitting, etc.) currently persist to `localStorage` only. The `Request` Prisma model + enums are in the schema and ready; wiring them needs one consolidated `api/requests` function — deliberately deferred to stay within the Hobby-plan 12-function limit (the deploy currently ships 11 functions).
 
 ## At very large scale
 

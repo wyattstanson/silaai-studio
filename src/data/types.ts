@@ -95,6 +95,44 @@ export interface ActivityEvent {
   actor?: string;         // who did it
 }
 
+// ---- Customer service requests (MTM-brand-inspired) ----------
+export type RequestType =
+  | "stitching"     // new made-to-measure garment
+  | "alteration"    // alter an existing piece
+  | "pickup"        // home pickup of cloth/garment
+  | "delivery"      // deliver a ready order
+  | "fitting"       // book a fitting / trial slot
+  | "consultation"  // fabric / style advice
+  | "reorder"       // reorder a past garment from saved measurements
+  | "express"       // rush an order
+  | "measurement"   // home measurement service
+  | "remake";       // fit issue / remake under guarantee
+
+export type RequestStatus =
+  | "submitted" | "acknowledged" | "scheduled" | "in_progress" | "completed" | "declined" | "cancelled";
+
+export interface RequestEvent { at: string; status: RequestStatus; note?: string; }
+
+export interface ServiceRequest {
+  id: ID;
+  code: string;            // REQ-0001
+  customerId: ID;
+  familyId?: ID;
+  type: RequestType;
+  status: RequestStatus;
+  garment?: string;
+  orderId?: ID;            // linked order for alteration/delivery/reorder/express/remake
+  preferredDate?: string;  // ISO date for pickup/delivery/fitting/measurement
+  timeSlot?: string;       // "10am – 12pm"
+  address?: string;
+  express?: boolean;
+  reference?: string;      // photo / inspiration stand-in
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  history: RequestEvent[];
+}
+
 export interface ModuleDef {
   id: string;
   name: string;
@@ -111,5 +149,6 @@ export interface DB {
   modules: ModuleDef[];
   users: User[];
   activity: ActivityEvent[];
+  requests: ServiceRequest[];
   shop: { name: string; owner: string; batch: string; phone: string };
 }

@@ -37,6 +37,11 @@ export function seed(): DB {
       { id: "A7", at: day(-3), type: "payment", summary: "Balance settled, Anarkali Suit", familyId: "FAM-03", customerId: "CUS-0004", orderId: "ORD-0044", amount: 3200 },
       { id: "A8", at: day(-1), type: "stage", summary: "Anarkali Suit marked Ready for dispatch", familyId: "FAM-03", customerId: "CUS-0004", orderId: "ORD-0044" },
     ],
+    requests: [
+      { id: "REQ-0001", code: "REQ-0001", customerId: "CUS-0001", familyId: "FAM-01", type: "pickup", status: "scheduled", preferredDate: day(2), timeSlot: "11am – 1pm", address: "14, Rose Villa, Katpadi", notes: "Two saree blouses to stitch.", createdAt: day(-3), updatedAt: day(-1), history: [{ at: day(-3), status: "submitted" }, { at: day(-2), status: "acknowledged" }, { at: day(-1), status: "scheduled", note: "Pickup confirmed" }] },
+      { id: "REQ-0002", code: "REQ-0002", customerId: "CUS-0003", familyId: "FAM-02", type: "alteration", status: "submitted", orderId: "ORD-0043", garment: "Silk Saree Blouse", notes: "Sleeves a touch tight.", createdAt: day(-1), updatedAt: day(-1), history: [{ at: day(-1), status: "submitted" }] },
+      { id: "REQ-0003", code: "REQ-0003", customerId: "CUS-0004", familyId: "FAM-03", type: "fitting", status: "acknowledged", preferredDate: day(4), timeSlot: "4pm – 6pm", notes: "Trial for the Anarkali before dispatch.", createdAt: day(-2), updatedAt: day(-1), history: [{ at: day(-2), status: "submitted" }, { at: day(-1), status: "acknowledged" }] },
+    ],
     families: [
       { id: "FAM-01", name: "Sharma Household", phone: "+91 98110 20304", createdAt: day(-320), note: "Regulars, bridal & festive" },
       { id: "FAM-02", name: "Iyer Household", phone: "+91 90045 88123", createdAt: day(-210) },

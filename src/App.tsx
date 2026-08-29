@@ -13,6 +13,7 @@ import { Placeholder } from "./modules/Placeholder";
 import { Showcase } from "./modules/Showcase";
 import { Auth } from "./modules/Auth";
 import { Portal } from "./modules/Portal";
+import { Requests } from "./modules/Requests";
 import { OrderDetail } from "./modules/OrderSheet";
 import { CustomerAdmin } from "./modules/CustomerAdmin";
 import { Empty } from "./components/ui/ui";
@@ -40,6 +41,8 @@ function Studio({ onShowcase }: { onShowcase: () => void }) {
     nav.push({ id: "orders", label: "Orders", icon: "orders", group: "Tailoring", count: activeOrders, tone: "accent" });
     nav.push({ id: "customers", label: "Customers", icon: "customers", group: "Tailoring", count: db.customers.length, tone: "sage" });
   }
+  const openReq = db.requests.filter(r => ["submitted", "acknowledged"].includes(r.status)).length;
+  nav.push({ id: "requests", label: "Requests", icon: "requests", group: "Manage", count: openReq, tone: "clay" });
   nav.push({ id: "admin", label: "Admin Console", icon: "settings", group: "Manage", tone: "clay" });
   if (on("sales")) nav.push({ id: "sales", label: "Material Sales", icon: "sales", group: "Counter", tone: "sage" });
   if (on("payments")) nav.push({ id: "payments", label: "Payments", icon: "payments", group: "Money", tone: "accent" });
@@ -57,6 +60,7 @@ function Studio({ onShowcase }: { onShowcase: () => void }) {
       {view === "dashboard" && <Dashboard go={setActive} />}
       {view === "orders" && <Orders />}
       {view === "customers" && <Customers />}
+      {view === "requests" && <Requests />}
       {view === "admin" && <Admin />}
       {view === "payments" && <Payments />}
       {view === "reports" && <Reports />}
@@ -75,9 +79,11 @@ function MemberPortal({ onShowcase }: { onShowcase: () => void }) {
   const memberIds = new Set(db.customers.filter(c => c.familyId === user?.familyId).map(c => c.id));
   const activeOrders = db.orders.filter(o => memberIds.has(o.customerId) && o.stage !== "delivered").length;
 
+  const openReq = db.requests.filter(r => r.familyId === user?.familyId && ["submitted", "acknowledged", "scheduled", "in_progress"].includes(r.status)).length;
   const nav: NavItem[] = [
     { id: "portal", label: "Overview", icon: "overview", group: "My Studio", tone: "neutral" },
     { id: "myorders", label: "My Orders", icon: "orders", group: "My Studio", count: activeOrders, tone: "accent" },
+    { id: "requests", label: "Requests", icon: "requests", group: "My Studio", count: openReq, tone: "clay" },
     { id: "measurements", label: "Measurements", icon: "measure", group: "My Studio", tone: "sage" },
     { id: "history", label: "History", icon: "history", group: "My Studio", tone: "clay" },
   ];
@@ -87,7 +93,7 @@ function MemberPortal({ onShowcase }: { onShowcase: () => void }) {
   return (
     <Shell nav={nav} active={view} onNavigate={setActive} crumb={crumb} onShowcase={onShowcase} onLogout={logout} canManage={false}
       renderWindow={win => <WindowContent win={win} readOnly />}>
-      <Portal active={view} go={setActive} />
+      {view === "requests" ? <Requests /> : <Portal active={view} go={setActive} />}
     </Shell>
   );
 }

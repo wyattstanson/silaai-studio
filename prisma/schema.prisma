@@ -70,6 +70,29 @@ enum ActivityType {
   CUSTOMER_REMOVED
 }
 
+enum RequestType {
+  STITCHING
+  ALTERATION
+  PICKUP
+  DELIVERY
+  FITTING
+  CONSULTATION
+  REORDER
+  EXPRESS
+  MEASUREMENT
+  REMAKE
+}
+
+enum RequestStatus {
+  SUBMITTED
+  ACKNOWLEDGED
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  DECLINED
+  CANCELLED
+}
+
 model Family {
   id        String     @id @default(cuid())
   name      String
@@ -107,6 +130,7 @@ model Customer {
   createdAt    DateTime      @default(now())
   measurements Measurement[]
   orders       Order[]
+  requests     Request[]
 
   @@index([familyId])
   @@index([name])
@@ -181,6 +205,31 @@ model Activity {
   @@index([customerId])
   @@index([orderId])
   @@index([at])
+}
+
+model Request {
+  id            String        @id @default(cuid())
+  code          String        @unique // REQ-0001
+  customerId    String
+  customer      Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  familyId      String?
+  type          RequestType
+  status        RequestStatus @default(SUBMITTED)
+  garment       String?
+  orderId       String?
+  preferredDate DateTime?
+  timeSlot      String?
+  address       String?
+  express       Boolean       @default(false)
+  reference     String?
+  notes         String?
+  history       Json // [{ at, status, note }]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([customerId])
+  @@index([familyId])
+  @@index([status])
 }
 
 // Monotonic counters so human codes (CUS-0001, S-42) stay unique at scale.
