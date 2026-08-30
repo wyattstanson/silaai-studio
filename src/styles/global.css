@@ -35,7 +35,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; margin: 0; 
 
 button { font-family: inherit; }
 
-::selection { background: var(--acacia-soft); color: var(--bark-900); }
+::selection { background: var(--acacia-soft); color: var(--text); }
 
 /* Slim savannah scrollbars */
 *::-webkit-scrollbar { width: 11px; height: 11px; }

@@ -25,15 +25,25 @@
   border-bottom: 1px solid var(--hairline);
 }
 .sc-bar .logo { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 19px; font-weight: 600; color: var(--text); background: none; border: none; cursor: pointer; padding: 0; }
-.sc-bar .logo .mark { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(150deg, var(--acacia), var(--acacia-deep)); color: #fdf6e6; display: grid; place-items: center; font-size: 16px; }
+.sc-bar .logo .mark { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(150deg, var(--maroon), var(--acacia)); color: #fdf6e6; display: grid; place-items: center; font-size: 16px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14); }
 .sc-bar a { color: var(--text-soft); text-decoration: none; font-size: 13.5px; font-weight: 550; padding: 6px 10px; border-radius: 7px; transition: background .15s, color .15s; }
 .sc-bar a:hover { background: color-mix(in srgb, var(--acacia) 14%, transparent); color: var(--text); }
 .sc-bar .grow { flex: 1; }
 .theme-btn { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--hairline); background: var(--surface); color: var(--text-soft); cursor: pointer; transition: background .15s, color .15s; }
 .theme-btn:hover { color: var(--text); background: var(--surface-2); }
 
-/* marquee ribbon */
-.ribbon { overflow: hidden; border-block: 1px solid var(--hairline); background: color-mix(in srgb, var(--acacia) 12%, var(--window-bg)); }
+/* marquee ribbon — festive maroon band with a gold temple-scallop edge */
+.ribbon {
+  overflow: hidden; position: relative;
+  border-block: 1px solid color-mix(in srgb, var(--maroon) 30%, var(--hairline));
+  background: color-mix(in srgb, var(--maroon) 12%, var(--window-bg));
+}
+.ribbon::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 7px;
+  background: radial-gradient(circle at 7px 7px, color-mix(in srgb, var(--acacia) 78%, transparent) 4.6px, transparent 5.1px) repeat-x;
+  background-size: 15px 7px;
+  opacity: 0.55;
+}
 .ribbon .track { display: inline-flex; gap: 40px; white-space: nowrap; padding: 9px 0; animation: marq 26s linear infinite; }
 .ribbon span { font-family: var(--font-display); font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--acacia-deep); font-weight: 600; }
 :root[data-theme="dark"] .ribbon span { color: var(--acacia); }
