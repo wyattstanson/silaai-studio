@@ -7,7 +7,7 @@ import { seed } from "./seed";
 import { api as backend } from "./api";
 import {
   bootstrapDb, customerCreate, customerPatch, orderCreate, orderPatch,
-  paymentCreate, measurementCreate, stageUp, type Refs,
+  paymentCreate, measurementCreate, requestCreate, stageUp, type Refs,
 } from "./remote";
 
 const KEY = "silai.db.v3";
@@ -76,7 +76,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     () => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
   );
   const [mode, setMode] = useState<Mode>("connecting");
-  const refs = useRef<Refs>({ customer: {}, order: {} });
+  const refs = useRef<Refs>({ customer: {}, order: {}, request: {} });
 
   // Try the API once on mount. If a database is reachable, hydrate from it and
   // switch to online (writes mirror to the server). Otherwise stay offline on
@@ -219,6 +219,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const req: ServiceRequest = { ...r, id: uid("REQ"), code: `REQ-${pad(db.requests.length + 1)}`, status: "submitted", createdAt: now, updatedAt: now, history: [{ at: now, status: "submitted" }] };
         setDb(d => ({ ...d, requests: [req, ...d.requests] }));
         log({ type: "customer_added", summary: `Requested ${r.type.replace(/_/g, " ")}`, familyId: r.familyId, customerId: r.customerId, actor: actor() });
+        if (online && R.customer[r.customerId]) {
+          backend.requests.create({ ...requestCreate(r), customerId: R.customer[r.customerId], orderId: r.orderId ? (R.order[r.orderId] ?? r.orderId) : undefined })
+            .then((srv: any) => { R.request[req.id] = srv.id; }).catch(warn);
+        }
         return req;
       },
       setRequestStatus: (id, status, note) => {
@@ -226,6 +230,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const rq = db.requests.find(x => x.id === id);
         setDb(d => ({ ...d, requests: d.requests.map(x => x.id === id ? { ...x, status, updatedAt: now, history: [...x.history, { at: now, status, note }] } : x) }));
         if (rq) log({ type: "customer_added", summary: `Request ${rq.code} ${status.replace(/_/g, " ")}`, familyId: rq.familyId, customerId: rq.customerId, actor: actor() });
+        if (online && R.request[id]) backend.requests.update(R.request[id], stageUp(status), note).catch(warn);
       },
 
       addOrder: (o) => {

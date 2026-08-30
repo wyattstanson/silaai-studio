@@ -48,7 +48,13 @@ async function main() {
     { type: "STAGE", summary: "Anarkali Suit marked ready for dispatch", familyId: khan.id, customerId: sana.id, at: day(-1) },
   ] });
 
-  await prisma.counter.createMany({ data: [{ name: "customer", value: 5 }, { name: "order", value: 46 }] });
+  await prisma.request.createMany({ data: [
+    { code: "REQ-0001", customerId: anjali.id, familyId: sharma.id, type: "PICKUP", status: "SCHEDULED", preferredDate: day(2), timeSlot: "11am – 1pm", address: "14, Rose Villa, Katpadi", notes: "Two saree blouses to stitch.", history: [{ at: day(-3), status: "SUBMITTED" }, { at: day(-2), status: "ACKNOWLEDGED" }, { at: day(-1), status: "SCHEDULED", note: "Pickup confirmed" }], createdAt: day(-3), updatedAt: day(-1) },
+    { code: "REQ-0002", customerId: meera.id, familyId: iyer.id, type: "ALTERATION", status: "SUBMITTED", garment: "Silk Saree Blouse", notes: "Sleeves a touch tight.", history: [{ at: day(-1), status: "SUBMITTED" }], createdAt: day(-1), updatedAt: day(-1) },
+    { code: "REQ-0003", customerId: sana.id, familyId: khan.id, type: "FITTING", status: "ACKNOWLEDGED", preferredDate: day(4), timeSlot: "4pm – 6pm", notes: "Trial for the Anarkali before dispatch.", history: [{ at: day(-2), status: "SUBMITTED" }, { at: day(-1), status: "ACKNOWLEDGED" }], createdAt: day(-2), updatedAt: day(-1) },
+  ] });
+
+  await prisma.counter.createMany({ data: [{ name: "customer", value: 5 }, { name: "order", value: 46 }, { name: "request", value: 3 }] });
 
   console.log("Seeded: 4 families, 5 customers, 5 orders, 4 users.");
 }

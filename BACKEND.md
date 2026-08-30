@@ -34,6 +34,8 @@ Indexes cover every real query: `User.phone` (unique), `Customer` by `familyId /
 | `POST /api/orders/:id/stage` | Advance stage |
 | `POST /api/orders/:id/payment` | Record advance/balance/refund |
 | `GET/POST /api/families` | List / create |
+| `POST /api/customers/:id` | Add a measurement (merged in to save a function) |
+| `POST/PATCH /api/requests` | Raise a service request / advance its status |
 | `GET /api/activity` | Family/customer feed, **keyset** pagination |
 | `GET /api/stats` | Headline totals, computed in SQL |
 
@@ -78,7 +80,7 @@ The store (`src/data/store.tsx`) is now hybrid:
 - **Auth stays local** (validated against the hydrated user list) even online; a new signup is also POSTed to the server. Full server-side login is a small follow-up.
 - The **demo-data generator** is local only.
 - `bootstrap` is capped (1000 customers / 2000 orders); past that, move the Admin console and lists onto the paginated endpoints (already built).
-- **Service requests** (customer requests: stitching, pickup, fitting, etc.) currently persist to `localStorage` only. The `Request` Prisma model + enums are in the schema and ready; wiring them needs one consolidated `api/requests` function — deliberately deferred to stay within the Hobby-plan 12-function limit (the deploy currently ships 11 functions).
+- **Service requests** are now server-backed via `POST/PATCH /api/requests` and are included in `/api/bootstrap`. To stay within the Hobby-plan 12-function limit, the `measurements` route was merged into `POST /api/customers/:id` — the deploy still ships **11 functions**.
 
 ## At very large scale
 

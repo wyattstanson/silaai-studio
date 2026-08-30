@@ -42,7 +42,7 @@ export interface CustomerRow {
 
 export const api = {
   health: () => req<{ ok: boolean; db: boolean; time: string }>("/health"),
-  bootstrap: () => req<{ families: any[]; customers: any[]; orders: any[]; activity: any[] }>("/bootstrap"),
+  bootstrap: () => req<{ families: any[]; customers: any[]; orders: any[]; activity: any[]; requests: any[] }>("/bootstrap"),
 
   login: (phone: string) => req<{ user: any }>("/auth", { method: "POST", body: JSON.stringify({ action: "login", phone }) }),
   signup: (name: string, phone: string) => req<{ user: any }>("/auth", { method: "POST", body: JSON.stringify({ action: "signup", name, phone }) }),
@@ -53,7 +53,12 @@ export const api = {
     create: (data: unknown) => req<any>("/customers", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, patch: unknown) => req<any>(`/customers/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
     remove: (id: string) => req<{ deleted: string }>(`/customers/${id}`, { method: "DELETE" }),
-    addMeasurement: (id: string, m: unknown) => req<any>(`/customers/${id}/measurements`, { method: "POST", body: JSON.stringify(m) }),
+    addMeasurement: (id: string, m: unknown) => req<any>(`/customers/${id}`, { method: "POST", body: JSON.stringify(m) }),
+  },
+
+  requests: {
+    create: (data: unknown) => req<any>("/requests", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, status: string, note?: string) => req<any>("/requests", { method: "PATCH", body: JSON.stringify({ id, status, note }) }),
   },
 
   orders: {

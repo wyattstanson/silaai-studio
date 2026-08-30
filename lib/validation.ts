@@ -51,6 +51,28 @@ export const orderInput = z.object({
 });
 export const orderPatch = orderInput.partial().omit({ customerId: true });
 
+export const RequestType = z.enum(["STITCHING", "ALTERATION", "PICKUP", "DELIVERY", "FITTING", "CONSULTATION", "REORDER", "EXPRESS", "MEASUREMENT", "REMAKE"]);
+export const RequestStatus = z.enum(["SUBMITTED", "ACKNOWLEDGED", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "DECLINED", "CANCELLED"]);
+
+export const requestInput = z.object({
+  customerId: z.string().min(1),
+  familyId: z.string().optional(),
+  type: RequestType,
+  garment: z.string().max(120).optional(),
+  orderId: z.string().optional(),
+  preferredDate: z.string().datetime().optional(),
+  timeSlot: z.string().max(40).optional(),
+  address: z.string().max(300).optional(),
+  express: z.boolean().optional(),
+  reference: z.string().max(300).optional(),
+  notes: z.string().max(500).optional(),
+});
+export const requestUpdate = z.object({
+  id: z.string().min(1),
+  status: RequestStatus,
+  note: z.string().max(200).optional(),
+});
+
 export const stageInput = z.object({ stage: OrderStage });
 export const paymentInput = z.object({
   kind: PaymentKind,

@@ -20,3 +20,4 @@ export async function nextCode(
 
 export const custCode = (n: number) => `CUS-${String(n).padStart(4, "0")}`;
 export const orderCode = (n: number) => `S-${n}`;
+export const reqCode = (n: number) => `REQ-${String(n).padStart(4, "0")}`;

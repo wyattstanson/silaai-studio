@@ -8,7 +8,7 @@
 import { api } from "./api";
 import type {
   ActivityEvent, ActivityType, Customer, DB, Family, Fulfilment, MaterialSource, Measurement,
-  Order, OrderKind, OrderStage, Payment,
+  Order, OrderKind, OrderStage, Payment, RequestStatus, RequestType, ServiceRequest,
 } from "./types";
 import { seed } from "./seed";
 
@@ -26,7 +26,7 @@ const ACT: Record<string, ActivityType> = {
   FAMILY_ADDED: "family_added", CUSTOMER_UPDATED: "customer_added", CUSTOMER_REMOVED: "customer_added",
 };
 
-export interface Refs { customer: Record<string, string>; order: Record<string, string> }
+export interface Refs { customer: Record<string, string>; order: Record<string, string>; request: Record<string, string> }
 
 function mapMeasurement(m: any): Measurement {
   return { id: m.id, takenAt: m.takenAt, garment: m.garment, values: Array.isArray(m.values) ? m.values : [], note: m.note ?? undefined };
@@ -37,11 +37,11 @@ function mapPayment(p: any): Payment {
 
 /** Fetch the whole working set and shape it into the app's DB. */
 export async function bootstrapDb(): Promise<{ db: DB; refs: Refs }> {
-  const [{ families, customers, orders, activity }, base] = await Promise.all([api.bootstrap(), Promise.resolve(seed())]);
+  const [{ families, customers, orders, activity, requests }, base] = await Promise.all([api.bootstrap(), Promise.resolve(seed())]);
 
   const codeByCuid: Record<string, string> = {};       // customer cuid -> code
   const orderCodeByCuid: Record<string, string> = {};
-  const refs: Refs = { customer: {}, order: {} };
+  const refs: Refs = { customer: {}, order: {}, request: {} };
 
   const outCustomers: Customer[] = customers.map((c: any) => {
     codeByCuid[c.id] = c.code;
@@ -75,9 +75,25 @@ export async function bootstrapDb(): Promise<{ db: DB; refs: Refs }> {
     amount: a.amount ?? undefined, actor: a.actor ?? undefined,
   }));
 
+  const outRequests: ServiceRequest[] = (requests ?? []).map((r: any): ServiceRequest => {
+    refs.request[r.code] = r.id;
+    return {
+      id: r.code, code: r.code,
+      customerId: codeByCuid[r.customerId] ?? r.customerId,
+      familyId: r.familyId ?? undefined,
+      type: low(r.type) as RequestType, status: low(r.status) as RequestStatus,
+      garment: r.garment ?? undefined,
+      orderId: r.orderId ? (orderCodeByCuid[r.orderId] ?? r.orderId) : undefined,
+      preferredDate: r.preferredDate ?? undefined, timeSlot: r.timeSlot ?? undefined, address: r.address ?? undefined,
+      express: r.express ?? false, reference: r.reference ?? undefined, notes: r.notes ?? undefined,
+      createdAt: r.createdAt, updatedAt: r.updatedAt,
+      history: (Array.isArray(r.history) ? r.history : []).map((h: any) => ({ at: h.at, status: low(h.status) as RequestStatus, note: h.note })),
+    };
+  });
+
   const db: DB = {
     ...base, // keeps modules + shop + seeded demo users so logins resolve
-    families: outFamilies, customers: outCustomers, orders: outOrders, activity: outActivity,
+    families: outFamilies, customers: outCustomers, orders: outOrders, activity: outActivity, requests: outRequests,
   };
   return { db, refs };
 }
@@ -102,3 +118,9 @@ export const orderPatch = (p: Partial<Order>) => ({
 export const paymentCreate = (p: Omit<Payment, "id" | "at">) => ({ kind: up(p.kind), amount: p.amount, method: up(p.method), note: p.note });
 export const measurementCreate = (m: Omit<Measurement, "id">) => ({ garment: m.garment, values: m.values, note: m.note, takenAt: m.takenAt });
 export const stageUp = up;
+
+export const requestCreate = (r: Omit<ServiceRequest, "id" | "code" | "status" | "createdAt" | "updatedAt" | "history">) => ({
+  customerId: r.customerId, familyId: r.familyId, type: up(r.type),
+  garment: r.garment, orderId: r.orderId, preferredDate: r.preferredDate, timeSlot: r.timeSlot,
+  address: r.address, express: r.express, reference: r.reference, notes: r.notes,
+});

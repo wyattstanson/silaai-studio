@@ -9,7 +9,7 @@ const ORDER_CAP = 2000;
 
 export default route({
   GET: async (_req, res) => {
-    const [families, customers, orders, activity] = await Promise.all([
+    const [families, customers, orders, activity, requests] = await Promise.all([
       prisma.family.findMany({ orderBy: { name: "asc" } }),
       prisma.customer.findMany({
         take: CUSTOMER_CAP,
@@ -22,7 +22,8 @@ export default route({
         include: { payments: { orderBy: { at: "asc" } } },
       }),
       prisma.activity.findMany({ take: 100, orderBy: { at: "desc" } }),
+      prisma.request.findMany({ take: 500, orderBy: { createdAt: "desc" } }),
     ]);
-    ok(res, { families, customers, orders, activity });
+    ok(res, { families, customers, orders, activity, requests });
   },
 });
