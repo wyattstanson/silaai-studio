@@ -187,7 +187,7 @@ function RequestDetail({ request, onClose, manage, custName }: { request: Servic
       kind: request.type === "alteration" ? "stitching" : "stitching",
       garment: request.garment || "Custom piece",
       materialSource: "shop", fulfilment: request.type === "delivery" ? "outside" : "local",
-      qty: 1, stage: "new", deadline: !!request.express,
+      qty: 1, stage: "new", priority: request.express ? "express" : "normal", deadline: !!request.express,
       deliveryDate: (request.preferredDate ? new Date(request.preferredDate) : due).toISOString(),
       price: 0, remarks: `From request ${request.code}. ${request.notes ?? ""}`.trim(),
     });

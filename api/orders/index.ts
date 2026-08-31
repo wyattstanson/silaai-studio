@@ -39,7 +39,7 @@ export default route({
     const input = body(req, orderInput);
     const order = await prisma.$transaction(async (tx) => {
       const code = await nextCode(tx, "order", orderCode);
-      const o = await tx.order.create({ data: { ...input, code, deliveryDate: new Date(input.deliveryDate) } });
+      const o = await tx.order.create({ data: { ...input, code, deliveryDate: new Date(input.deliveryDate), measurementSnapshot: (input.measurementSnapshot ?? undefined) as any } });
       const c = await tx.customer.findUnique({ where: { id: o.customerId }, select: { familyId: true } });
       await tx.activity.create({ data: { type: "ORDER_PLACED", summary: `Placed order for ${o.garment} (${o.code})`, familyId: c?.familyId, customerId: o.customerId, orderId: o.id } });
       return o;

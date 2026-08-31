@@ -1,58 +1,58 @@
 /* ============================================================
-   Silai — Design Tokens
-   Punjabi × Tamil Indian palette: kumkum maroon, turmeric gold,
-   mehndi green, peacock, rani pink — on sandalwood ivory.
-   Rich but matte. No neon. No glow.
+   Threadline — Design Tokens
+   Dye-vat indigo + marigold gold on muslin/parchment.
+   A fabric-and-thread palette. Matte, no neon, no glow.
+   (Token names kept stable; only pigments change.)
    ============================================================ */
 
 :root {
-  /* ---- Warm pigment scale (sandalwood → ink) ------------------ */
-  --bone-50:  #fdf7ea;
-  --bone-100: #f6eeda;
-  --bone-200: #ece0c6;
-  --sand-300: #e0cfa8;
-  --sand-400: #d0b884;
-  --clay-500: #b98a4e;
-  --bark-600: #7c5a44;
-  --bark-700: #5a3b30;
-  --bark-800: #3f2521;
-  --bark-900: #2c1714;   /* darkest ink */
+  /* ---- pigment scale (muslin → indigo ink) -------------------- */
+  --bone-50:  #fbf8f0;
+  --bone-100: #f4efe2;
+  --bone-200: #e9e2d0;
+  --sand-300: #dcd3ba;
+  --sand-400: #c9bd9a;
+  --clay-500: #b08a52;
+  --bark-600: #6a6480;
+  --bark-700: #43406a;
+  --bark-800: #2b2a4e;
+  --bark-900: #1f2040;   /* darkest indigo ink */
 
-  /* ---- Indian accents (rich, muted, festive) ------------------ */
-  --acacia:      #bd8420;  /* turmeric / marigold gold — PRIMARY highlight */
+  /* ---- accents --------------------------------------------- */
+  --acacia:      #bd8420;  /* marigold gold — CTA / highlight (PRIMARY action) */
   --acacia-deep: #986710;
   --acacia-soft: #f3e2b4;
-  --maroon:      #9a2d3d;  /* kumkum / arakku maroon — brand & festive */
-  --maroon-deep: #79212f;
-  --maroon-soft: #f1d7d9;
-  --sage:        #6d7a3a;  /* mehndi / henna green */
-  --sage-deep:   #545e2b;
-  --sage-soft:   #e3e6c6;
-  --clay:        #b0384a;  /* kumkum red — urgent / dispatch */
-  --clay-soft:   #f4d7da;
-  --peacock:     #1d6b66;  /* Tamil temple peacock teal */
-  --peacock-soft:#d4e6e3;
-  --plum:        #a83d6c;  /* rani pink (Punjabi phulkari) */
+  --maroon:      #34366e;  /* dye-vat indigo — brand & structure */
+  --maroon-deep: #262a55;
+  --maroon-soft: #dee0f0;
+  --sage:        #4f7d43;  /* leaf green — Ready / good */
+  --sage-deep:   #3c6132;
+  --sage-soft:   #dcebd6;
+  --clay:        #b23a3a;  /* red — overdue / urgent */
+  --clay-soft:   #f4dad6;
+  --peacock:     #2a6f78;  /* teal — info, complements indigo */
+  --peacock-soft:#d3e6e8;
+  --plum:        #6d5a8a;  /* muted violet-indigo accent */
 
-  /* ---- Semantic surfaces (light) ------------------------------- */
-  --app-bg:        #ece0c6;
-  --window-bg:     #fdf8ec;
-  --surface:       #fffdf6;
-  --surface-2:     #f6eeda;
-  --sidebar-bg:    rgba(248, 240, 223, 0.74);
-  --titlebar-bg:   rgba(253, 248, 236, 0.82);
+  /* ---- semantic surfaces (light / muslin) ------------------- */
+  --app-bg:        #e9e2d0;
+  --window-bg:     #fbf8f0;
+  --surface:       #fffdf8;
+  --surface-2:     #f3eede;
+  --sidebar-bg:    rgba(244, 239, 226, 0.74);
+  --titlebar-bg:   rgba(251, 248, 240, 0.82);
 
-  --text:          #3a201d;  /* warm maroon-brown ink */
-  --text-soft:     #6e4c42;
-  --text-faint:    #9a7d6a;
-  --hairline:      #e7d6ba;
-  --hairline-soft: #f0e6cf;
+  --text:          #23244a;  /* indigo-ink */
+  --text-soft:     #565877;
+  --text-faint:    #8a8ca6;
+  --hairline:      #e3ddca;
+  --hairline-soft: #efe9d8;
 
-  /* ---- Status ------------------------------------------------- */
-  --ok:      #6d7a3a;   --ok-bg:   #e3e6c6;
-  --warn:    #bd8420;   --warn-bg: #f5e6bf;
-  --urgent:  #b0384a;   --urgent-bg:#f4d7da;
-  --info:    #1d6b66;   --info-bg: #d4e6e3;
+  /* ---- status (indigo=queue · gold=active · green=ready · red=overdue) --- */
+  --ok:      #4f7d43;   --ok-bg:   #dcebd6;
+  --warn:    #bd8420;   --warn-bg: #f5e7c1;
+  --urgent:  #b23a3a;   --urgent-bg:#f4dad6;
+  --info:    #34366e;   --info-bg: #dee0f0;
 
   /* ---- macOS window traffic lights ---------------------------- */
   --tl-red:    #ff5f57;
@@ -66,12 +66,12 @@
   --r-sm: 7px;
   --r-pill: 999px;
 
-  /* ---- Elevation (warm-tinted, soft) -------------------------- */
-  --sh-window: 0 24px 60px -12px rgba(60, 30, 26, 0.34), 0 6px 18px -6px rgba(60, 30, 26, 0.20);
-  --sh-1: 0 1px 2px rgba(60, 30, 26, 0.06), 0 1px 1px rgba(60, 30, 26, 0.04);
-  --sh-2: 0 2px 8px -2px rgba(60, 30, 26, 0.10), 0 1px 2px rgba(60, 30, 26, 0.06);
-  --sh-3: 0 12px 28px -8px rgba(60, 30, 26, 0.18), 0 3px 8px -4px rgba(60, 30, 26, 0.10);
-  --ring: 0 0 0 3px rgba(189, 132, 32, 0.30);
+  /* ---- Elevation (cool-tinted, soft) -------------------------- */
+  --sh-window: 0 24px 60px -12px rgba(28, 28, 60, 0.32), 0 6px 18px -6px rgba(28, 28, 60, 0.18);
+  --sh-1: 0 1px 2px rgba(28, 28, 60, 0.06), 0 1px 1px rgba(28, 28, 60, 0.04);
+  --sh-2: 0 2px 8px -2px rgba(28, 28, 60, 0.10), 0 1px 2px rgba(28, 28, 60, 0.06);
+  --sh-3: 0 12px 28px -8px rgba(28, 28, 60, 0.18), 0 3px 8px -4px rgba(28, 28, 60, 0.10);
+  --ring: 0 0 0 3px rgba(52, 54, 110, 0.28);
 
   /* ---- Type --------------------------------------------------- */
   --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -82,40 +82,38 @@
 }
 
 /* ============================================================
-   Dark (festive night: deep aubergine-maroon, bright ivory text)
+   Dark (dye-vat night: deep indigo, bright text, marigold pops)
    ============================================================ */
 :root[data-theme="dark"] {
-  --app-bg:        #1a1210;
-  --window-bg:     #221713;
-  --surface:       #2a1e18;
-  --surface-2:     #1e1512;
-  --sidebar-bg:    rgba(30, 21, 17, 0.80);
-  --titlebar-bg:   rgba(34, 23, 19, 0.86);
+  --app-bg:        #14152b;
+  --window-bg:     #1c1d3a;
+  --surface:       #23244a;
+  --surface-2:     #191a34;
+  --sidebar-bg:    rgba(25, 26, 52, 0.80);
+  --titlebar-bg:   rgba(28, 29, 58, 0.86);
 
-  /* Bright, high-contrast text so it always reads on dark */
-  --text:          #f6ecd8;
-  --text-soft:     #d0ba9c;
-  --text-faint:    #a68b70;
-  --hairline:      #3c2c24;
-  --hairline-soft: #2d211b;
+  --text:          #edecf6;
+  --text-soft:     #b7b8d4;
+  --text-faint:    #8688a8;
+  --hairline:      #33345c;
+  --hairline-soft: #26274a;
 
-  /* Lifted-chroma pigments for dark backgrounds (still matte) */
-  --acacia:      #d8ab4c;  --acacia-deep: #ac823a;  --acacia-soft: #3f3116;
-  --maroon:      #cf6070;  --maroon-deep: #a94454;  --maroon-soft: #3b1d22;
-  --sage:        #9aa662;  --sage-deep:   #7b8749;  --sage-soft:   #2d3219;
-  --clay:        #d4687a;  --clay-soft:   #3b1e23;
-  --peacock:     #6fb2ab;  --peacock-soft:#1d302e;
-  --plum:        #c76c96;
+  --acacia:      #d8ab4c;  --acacia-deep: #ac823a;  --acacia-soft: #3b3117;
+  --maroon:      #8286cc;  --maroon-deep: #6165ab;  --maroon-soft: #262a51;
+  --sage:        #7fb06f;  --sage-deep:   #63924f;  --sage-soft:   #253620;
+  --clay:        #d47a7a;  --clay-soft:   #3a2222;
+  --peacock:     #5fa9b2;  --peacock-soft:#173032;
+  --plum:        #a892cc;
 
-  --ok:      #9aa662;
+  --ok:      #7fb06f;
   --warn:    #d8ab4c;
-  --urgent:  #d4687a;
-  --info:    #6fb2ab;
+  --urgent:  #d47a7a;
+  --info:    #8286cc;
 
-  --ok-bg:   #2d3219;
-  --warn-bg: #3a2e14;
-  --urgent-bg:#3b1e23;
-  --info-bg: #1d302e;
+  --ok-bg:   #253620;
+  --warn-bg: #3b3117;
+  --urgent-bg:#3a2222;
+  --info-bg: #262a51;
 
   --sh-window: 0 24px 60px -14px rgba(0, 0, 0, 0.68), 0 6px 18px -8px rgba(0, 0, 0, 0.52);
   --sh-1: 0 1px 2px rgba(0,0,0,0.45);
@@ -125,7 +123,7 @@
 }
 
 /* ------------------------------------------------------------
-   Dark de-glow: keep the festive accents matte, never neon
+   Dark de-glow: keep marigold CTAs matte, never neon
    ------------------------------------------------------------ */
 :root[data-theme="dark"] .btn-primary,
 :root[data-theme="dark"] .nav-item[aria-current="page"] {

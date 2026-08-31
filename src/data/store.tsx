@@ -54,7 +54,7 @@ interface Store {
   deleteCustomer: (id: string) => void;
   generateDemoCustomers: (n: number) => void;
   clearDemoCustomers: () => void;
-  addMeasurement: (customerId: string, m: Omit<Measurement, "id">) => void;
+  addMeasurement: (customerId: string, m: Omit<Measurement, "id" | "version">) => void;
   addRequest: (r: Omit<ServiceRequest, "id" | "code" | "status" | "createdAt" | "updatedAt" | "history">) => ServiceRequest;
   setRequestStatus: (id: string, status: RequestStatus, note?: string) => void;
   addOrder: (o: Omit<Order, "id" | "code" | "payments" | "placedAt">) => Order;
@@ -209,8 +209,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       })),
       addMeasurement: (customerId, m) => {
         const c = db.customers.find(x => x.id === customerId);
-        setDb(d => ({ ...d, customers: d.customers.map(c => c.id === customerId ? { ...c, measurements: [{ ...m, id: uid("M") }, ...c.measurements] } : c) }));
-        log({ type: "measurement", summary: `New measurement recorded, ${m.garment}`, familyId: c?.familyId, customerId, actor: actor() });
+        const prev = (c?.measurements ?? []).filter(x => x.garment.toLowerCase() === m.garment.toLowerCase());
+        const version = prev.reduce((mx, x) => Math.max(mx, x.version ?? 1), 0) + 1;
+        setDb(d => ({ ...d, customers: d.customers.map(c => c.id === customerId ? { ...c, measurements: [{ ...m, id: uid("M"), version }, ...c.measurements] } : c) }));
+        log({ type: "measurement", summary: `Recorded ${m.garment} measurement v${version}`, familyId: c?.familyId, customerId, actor: actor() });
         if (online && R.customer[customerId]) backend.customers.addMeasurement(R.customer[customerId], measurementCreate(m)).catch(warn);
       },
 
@@ -235,8 +237,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       addOrder: (o) => {
         const n = 42 + db.orders.length + 1;
-        const ord: Order = { ...o, id: `ORD-${pad(n)}`, code: `S-${n}`, placedAt: new Date().toISOString(), payments: [] };
         const c = db.customers.find(x => x.id === o.customerId);
+        // lock a snapshot of the customer's latest measurements for this order
+        let snapshot = o.measurementSnapshot;
+        if (!snapshot && c) {
+          const match = c.measurements.find(x => x.garment.toLowerCase() === o.garment.toLowerCase()) ?? c.measurements[0];
+          if (match) snapshot = { garment: match.garment, version: match.version, values: match.values };
+        }
+        const ord: Order = { ...o, measurementSnapshot: snapshot, id: `ORD-${pad(n)}`, code: `S-${n}`, placedAt: new Date().toISOString(), payments: [] };
         setDb(d => ({ ...d, orders: [ord, ...d.orders] }));
         log({ type: "order_placed", summary: `Placed order for ${ord.garment} (${ord.code})`, familyId: c?.familyId, customerId: o.customerId, orderId: ord.id, actor: actor() });
         if (online && R.customer[o.customerId]) {

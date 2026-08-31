@@ -1,181 +1,201 @@
-# Architecture — Silai
+# Threadline — Architecture
 
-Silai is a **local-first** React app with an **offline-capable core** that upgrades to a **serverless Postgres** backend when a database is connected. The same UI runs in both modes; the store decides which at startup and degrades gracefully.
+> Tailoring Shop Management Application · Requirements → UX → Data → Stack → System Architecture
+>
+> This document follows the authoritative spec **_Threadline_Requirements_Design_Architecture_ (v1.0)**. This repository is the **Phase‑1 interactive prototype** referenced in that spec — see [§9, "This repository"](#9-this-repository-the-phase-1-prototype) for exactly what it implements today versus the full production target.
 
-- **Frontend:** React 18 + TypeScript, Vite 5, CSS-variable design tokens (no UI framework)
-- **Backend:** Vercel Serverless Functions (Node) + Prisma ORM + zod validation
-- **Database:** PostgreSQL (Neon / Vercel Postgres)
-- **Deploy:** GitHub → Vercel (static build + `/api` functions)
-
-Scale of the prototype: **43 source files · ~3,500 LOC · 11 serverless functions · 9 DB models.**
+Threadline is a **mobile-first** application for a local dress-materials and tailoring shop. Shop staff manage the end-to-end custom-stitching lifecycle; customers track their own orders. It targets native apps on phone and iPad plus a staff web console, backed by a shared cloud service, so the counter and the customer always see consistent, up-to-date information.
 
 ---
 
-## The five layers
+## 1. Objectives
 
-Each layer talks only to the one below it.
+- Give every customer a **durable unique ID** that survives shared household phone numbers.
+- Store **versioned measurement profiles** per customer per garment type, reusable across visits.
+- Capture stitching requirements (lining, material source, design notes, reference-photo notes) against every order.
+- Track the **full order lifecycle** with automatic customer notifications at key milestones.
+- Record advance payments and running balances accurately, with partial payments.
+- Support in-person **and courier-based** dispatch and receipt.
+- Work equally well on a phone at the counter and an iPad used as a fixed terminal.
 
-| # | Layer | Responsibility | Key files |
-| --- | --- | --- | --- |
-| 1 | **UI** | React components: macOS desktop shell (menubar, draggable window, dock, bubbles), floating-window manager, feature modules, primitives, bespoke SVG icons, CSS-drawn garment art, virtualized list | `components/Shell.tsx`, `components/windows/*`, `components/Icon.tsx`, `components/GarmentArt.tsx`, `components/VirtualList.tsx`, `modules/*` |
-| 2 | **State** | One Context `Store` holds the in-memory model, persists to `localStorage`, runs the hybrid online/offline mode, owns phone auth + theme. Reads are synchronous so the UI never changes between modes | `data/store.tsx`, `data/types.ts`, `data/seed.ts` |
-| 3 | **Data access** | Typed API client, a mapping layer (app model ↔ API: lowercase enums / human ids ↔ UPPERCASE enums / `cuid`s via code→id ref maps), and CSV/JSON export helpers | `data/api.ts`, `data/remote.ts`, `lib/exportData.ts` |
-| 4 | **API** | Vercel serverless functions in `/api`. Shared `/lib`: method router with CORS + error handling, Prisma singleton (warm reuse), atomic human-code counters, zod schemas | `api/*.ts`, `lib/http.ts`, `lib/prisma.ts`, `lib/validation.ts`, `lib/codes.ts` |
-| 5 | **Database** | PostgreSQL via Prisma — 9 models, indexed on real access paths, cascade deletes, enums, a `Counter` for unique codes. Pooled connection for functions, direct for migrations | `prisma/schema.prisma`, `prisma/seed.ts` |
+## 2. User roles
+
+| Role | Can do | Primary device |
+| --- | --- | --- |
+| **Staff / Tailor desk** | Register customers, record measurements, create & progress orders, record payments, manage dispatch, send updates | iPad at counter, phone for mobility |
+| **Owner / Admin** | Everything staff can, plus reporting, staff accounts, shop config (garment types, pricing) | iPad or phone |
+| **Customer** | Look up own profile by phone (select ID if shared), view order status, balance, measurement history, notifications | Phone app / web portal |
+
+---
+
+## 3. System architecture (layers)
+
+A layered client-server architecture: responsive clients talk to a single API gateway, which fronts a set of application services sharing one relational database, with object storage for photos and external integrations for notifications, courier tracking, and payments.
 
 ```mermaid
 flowchart TD
-    UI["Layer 1 · UI<br/>React components, window manager"]
-    ST["Layer 2 · State<br/>Context store + localStorage"]
-    DA["Layer 3 · Data access<br/>API client + mapping + export"]
-    API["Layer 4 · API<br/>Vercel functions + zod"]
-    DB["Layer 5 · Database<br/>Prisma + PostgreSQL"]
-    LS[(localStorage)]
+    subgraph Clients
+      iOS["iOS app (iPhone / iPad)"]
+      AND["Android app (phone / tablet)"]
+      WEB["Staff web console / customer portal"]
+    end
+    GW["API Gateway / Edge<br/>auth · rate-limit · routing"]
+    subgraph Services["Application services (modular monolith)"]
+      C["Customer & Household"]
+      M["Measurement"]
+      O["Order & Workflow"]
+      P["Payment & Billing"]
+      D["Dispatch & Courier"]
+      N["Notification"]
+    end
+    DB[(PostgreSQL)]
+    OBJ[(Object storage · photos)]
+    Q[["Queue + Redis"]]
+    EXT["External: FCM/APNs · SMS/WhatsApp · Courier APIs · Payment gateway"]
 
-    UI --> ST
-    ST <-->|offline| LS
-    ST --> DA
-    DA -->|online only| API
-    API --> DB
+    iOS & AND & WEB --> GW --> Services
+    C & M & O & P & D --> DB
+    O --> OBJ
+    N --> Q --> EXT
 ```
+
+**Layers**
+
+| Layer | Responsibility |
+| --- | --- |
+| **Client apps** | iOS & Android (phone + tablet) and a lightweight staff web console / customer web portal. Share business logic via a common design system and API client. |
+| **API / Edge** | Single API gateway: staff auth (JWT), OTP-based customer lookup, rate limiting, routing. |
+| **Application services** | Modular services — Customer & Household, Measurement, Order & Workflow, Payment & Billing, Dispatch & Courier, Notification. Starts as a modular monolith, splittable later. |
+| **Data & integrations** | PostgreSQL (system of record), object storage for photos, Redis for cache/session/queue state, a message queue for async notifications. |
+| **External** | FCM/APNs push, SMS/WhatsApp Business API, courier partner APIs/webhooks, payment gateway (UPI/card). |
+
+**Key decisions**
+
+- **Modular monolith first** — one deployable backend with clean module boundaries; lower ops overhead for a single shop, with a clear path to split services as volume grows.
+- **Redundant measurement snapshots** — each order stores a locked copy of the measurements used, so history stays accurate even after the master profile changes.
+- **Household by shared phone** — many `Customer` rows may share one phone number; no separate household entity.
+- **Async notifications** — dispatched via a queue so slow SMS/WhatsApp/courier calls never block staff actions.
 
 ---
 
-## How data flows
+## 4. Order workflow
 
-### Offline — the default
-
-No database required; runs anywhere, instantly.
-
-1. The store boots from `localStorage` (or seeds fresh sample data).
-2. Components read the in-memory model synchronously via `useStore()`.
-3. Every mutation updates state and writes back to `localStorage`.
-
-### Online — when a database is configured
-
-1. On mount, the store pings `GET /api/health`.
-2. If the DB is reachable, `GET /api/bootstrap` hydrates the whole working set in **one call** and the store switches to online mode.
-3. Mutations apply locally for an instant UI, then **mirror** to the API in the background.
-4. The API validates (zod), writes via Prisma, and logs an `Activity` row.
+Eight defined states, with automatic customer notifications at key milestones (especially **Ready** and **Delivered/Dispatched**):
 
 ```mermaid
-sequenceDiagram
-    participant U as UI
-    participant S as Store
-    participant A as /api
-    participant P as Postgres
-    U->>S: mount
-    S->>A: GET /api/health
-    A-->>S: { db: true }
-    S->>A: GET /api/bootstrap
-    A->>P: read working set
-    P-->>A: rows
-    A-->>S: model
-    Note over S,U: online mode — chip shows "Synced"
-    U->>S: create order (optimistic)
-    S->>A: POST /api/orders
-    A->>P: insert + activity
+flowchart LR
+    A[Order Created] --> B[Material Received] --> C[Cutting] --> D[Stitching] --> E[Quality Check] --> F[Ready] --> G[Delivered / Dispatched] --> H[Closed]
 ```
 
-A menubar chip shows the live mode — **Synced** or **Offline**. Human ids (`CUS-0001`, `S-42`, `REQ-0001`) stay stable in the UI while a **code → cuid** ref map lets the store address server rows.
+Priority per order: **Normal / Urgent / Express**. Collection modes: **customer pickup**, **shop delivery**, **courier dispatch** (courier company, tracking number, dispatch date) — plus recording items **received** from a customer via courier.
 
 ---
 
-## Domain model
+## 5. Data schema
 
-The shop's paper workflow, as a relational schema.
+Core entities (PK = primary key, FK = foreign key). Measurement history is versioned; order snapshots are immutable.
 
 ```mermaid
 erDiagram
-    FAMILY   ||--o{ CUSTOMER    : has
-    FAMILY   ||--o{ USER        : "signs in"
-    CUSTOMER ||--o{ MEASUREMENT : has
-    CUSTOMER ||--o{ ORDER       : places
-    CUSTOMER ||--o{ REQUEST     : raises
-    ORDER    ||--o{ PAYMENT     : receives
+    CUSTOMER   ||--o{ MEASUREMENT : has
+    CUSTOMER   ||--o{ ORDER       : places
+    ORDER      ||--o{ PAYMENT     : receives
+    CUSTOMER   ||--o{ NOTIFICATION: receives
+    ORDER      ||--o{ NOTIFICATION: triggers
+    SHOP       ||--o{ STAFF       : employs
 
-    FAMILY      { string id PK }
-    USER        { string phone PK }
-    CUSTOMER    { string code UK }
-    ORDER       { string code UK }
-    REQUEST     { string code UK }
-    COUNTER     { string name PK }
-    ACTIVITY    { string id PK }
+    CUSTOMER     { string customer_id PK }
+    MEASUREMENT  { string measurement_id PK }
+    ORDER        { string order_id PK }
+    PAYMENT      { string payment_id PK }
+    NOTIFICATION { string notification_id PK }
+    STAFF        { string staff_id PK }
+    SHOP         { string shop_id PK }
 ```
 
-- A **Family** has many **Customers** and **Users** (phone auth; `owner` or `member`).
-- A **Customer** has many **Measurements**, **Orders** and **Requests**.
-- An **Order** has many **Payments**; stage flows New → Cutting → Stitching → Ready → Delivered.
-- A **Request** carries a type, a status, and a JSON `history` timeline.
-- **Activity** is a flat, indexed audit trail. **Counter** issues human codes atomically (inside a transaction) so ids stay unique under concurrency.
-- Deleting a customer cascades to their orders, payments, measurements and requests.
+- **Customer** — `customer_id` (e.g. `CUS-000123`, immutable), name, `phone` (not unique — households share), `alt_phone`, address, `gender_category`, notes, `created_at`.
+- **Measurement Profile & Version** — `measurement_id`, `customer_id` (FK), `garment_type`, `version` (increments per customer + garment), `fields` (JSON), notes, `recorded_at`.
+- **Order** — `order_id` (e.g. `ORD-2026-000456`), `customer_id` (FK), `garment_type`, `measurement_snapshot` (JSON, locked), `requirements` (JSON: lining, material_source, material_notes, design_details, special_instructions, photo_note), `price`, `advance`, `delivery_date`, `priority`, `status`, `status_history` (JSON array of `{status, timestamp}`), `dispatch` (JSON: mode, courier_company, tracking_number, dispatch_date), `created_at`.
+- **Payment** — `payment_id`, `order_id` (FK), `amount`, `mode` (Cash/UPI/Card/Bank), `reference?`, `recorded_at`.
+- **Notification** — `notification_id`, `customer_id` (FK), `order_id?` (FK), `event`, `message`, `channel` (Push/SMS/WhatsApp/In-app), `read`, `sent_at`.
+- **Staff & Shop config** — `staff_id`, name/phone/role (Owner·Admin / Staff), `shop_id` (FK, multi-branch ready), `garment_templates` (JSON: measurement field templates per garment type).
 
 ---
 
-## API surface
+## 6. UX design
 
-Eleven serverless functions — one under the Vercel Hobby-plan cap of twelve.
+- **Navigation:** a Staff / Customer role toggle. Staff = five destinations shown as a **navigation rail** on tablet/iPad and a **bottom tab bar** on phone: **Dashboard · Customers · New Order · Orders · Notifications**. Customer = a single simplified flow (phone lookup → household disambiguation → personal home with ID, orders, balances, measurements, notifications).
+- **Key screens:** Dashboard (stat cards + attention list), Customer search & profile (household siblings, versioned measurements, order history), 5-step **New Order wizard**, Order detail (status tracker, requirements, locked snapshot, payment ledger, dispatch fields), Customer self-service home (ID card with scan code, orders, notifications).
+- **Visual direction:** deep **indigo** (dye-vat blue) primary, warm **marigold/gold** accent, soft **muslin/parchment** background. Serif headings + grotesque sans body + **monospace for IDs**. Signature **running-stitch dashed rule** as a divider and a **stitched progress tracker** for the workflow. Status colours: queue = indigo, active = gold, Ready = green, overdue = red.
 
-| Endpoint | Methods | Purpose |
+---
+
+## 7. Technology stack (production target)
+
+| Layer | Recommendation |
+| --- | --- |
+| Mobile client | **Flutter** (one codebase, iOS + Android, phone + iPad) |
+| Web console / portal | **React + TypeScript**, responsive |
+| Backend API | **Node.js (NestJS)** modular-monolith |
+| Database | **PostgreSQL** (relational integrity + JSON columns for flexible fields) |
+| Cache / queue | **Redis** + managed queue (SQS / Pub-Sub) |
+| Object storage | **S3 / GCS** (reference photos) |
+| Push | **FCM** (Android/web) + **APNs** (iOS) |
+| SMS / WhatsApp | Regional SMS gateway + **WhatsApp Business API** |
+| Auth | **JWT** staff login; **OTP** customer lookup |
+| Hosting | Managed cloud (AWS/GCP), containers (ECS / Cloud Run), Kubernetes once multi-branch |
+| CI/CD | **GitHub Actions** — build/deploy mobile + backend |
+| Observability | Centralized logging + error tracking (Sentry) + uptime monitoring |
+
+---
+
+## 8. Deployment strategy
+
+- **Environments:** Development (seeded sample data — the prototype) → Staging (production-like, UAT with shop staff) → Production (isolated data, backups, monitoring).
+- **Release:** backend + web deploy via CI/CD on merge to release, gated by tests; mobile via CI to TestFlight / Play internal, then store review; DB via versioned migrations with rollback; **feature flags** for staged workflow rollout.
+- **Backup & recovery:** daily DB backups with 30-day point-in-time recovery; versioned object storage; documented recovery runbook.
+- **Security:** TLS everywhere, data encrypted at rest, RBAC (staff scoped to shop, customer scoped to own `customer_id`), full audit log.
+- **Monitoring:** uptime + API latency alerting; notification delivery tracking with retry; usage dashboards (orders created, turnaround time, overdue rate).
+
+---
+
+## 9. This repository — the Phase‑1 prototype
+
+The spec's **Phase 1 (Core MVP)** is "the interactive prototype already reviewed" — that is **this codebase**. It implements the Phase‑1 scope as a **single responsive web app** (the fastest path to a reviewable prototype), not yet the full native/production stack in §7.
+
+**What Phase 1 covers here:** customer registration & household handling · measurements · order creation & a status workflow · payments & running balances · an in-app notification/activity feed · plus a customer self-service portal and a customer service-request inbox.
+
+**Prototype stack (what's actually running):**
+
+| Area | Prototype | → Production target (§7) |
 | --- | --- | --- |
-| `/api/health` | GET | Liveness & database reachability |
-| `/api/bootstrap` | GET | Hydrate the whole working set in one call |
-| `/api/auth` | POST | Login / sign-up by phone number |
-| `/api/customers` | GET · POST | Aggregated, searchable, paginated list · create |
-| `/api/customers/[id]` | GET · POST · PATCH · DELETE | Dossier · add measurement · edit · delete |
-| `/api/orders` | GET · POST | Filter by stage/customer · create |
-| `/api/orders/[id]` | GET · PATCH · DELETE | Read · edit · delete |
-| `/api/orders/[id]/action` | POST | Advance stage · record payment |
-| `/api/families` | GET · POST | List · create household |
-| `/api/requests` | POST · PATCH | Raise a service request · advance its status |
-| `/api/activity` | GET | Family / customer feed, keyset pagination |
+| Client | React 18 + TypeScript + Vite (single responsive web app; macOS-desktop shell) | Flutter mobile + React web console |
+| Backend | Vercel serverless functions (`/api`) | NestJS modular monolith |
+| Database | PostgreSQL via Prisma | PostgreSQL (same) |
+| Offline | `localStorage` cache, offline-first, mirrors to the API when a DB is set | Staff-app offline sync queue (Phase 3) |
+| Notifications | In-app activity feed | + Push / SMS / WhatsApp (Phase 2) |
+| Auth | Phone (demo OTP) | JWT staff + OTP customer |
+| Deploy | GitHub → Vercel | GitHub Actions → managed cloud |
 
-**Scalability lives in SQL:** the customer list aggregates orders + payments in CTEs and paginates; the activity feed uses **keyset** (cursor) pagination; sort clauses are whitelisted; inputs are zod-validated. The Admin console renders thousands of rows through a **windowed list**.
+**Implemented to the spec** (Phase‑1):
 
----
+- The full **8-stage order workflow** (Order Created → Material Received → Cutting → Stitching → Quality Check → Ready → Delivered/Dispatched → Closed).
+- **Versioned measurements** (per customer + garment, history never overwritten) and an **immutable measurement snapshot locked to each order**.
+- Order **priority** (Normal / Urgent / Express).
+- The spec's **indigo (dye-vat) + marigold + muslin** visual direction, in light and dark.
 
-## Repository map
+**Still simplified** (deferred to later phases):
 
-```
-src/
-  main.tsx  App.tsx            entry + role-based routing
-  components/
-    Shell.tsx  Dock.tsx        macOS desktop, menubar, dock
-    Icon.tsx  GarmentArt.tsx   bespoke SVG icons + illustrations
-    VirtualList.tsx            windowed rendering
-    windows/                   floating window manager
-    ui/                        buttons, cards, modals, fields…
-  modules/                     14 feature screens
-  data/     store · types · seed · api · remote
-  lib/      format · stages · requests · exportData
-  hooks/    useDrag.ts
-  styles/   tokens.css · global.css
-api/                           11 serverless functions
-lib/         http · prisma · validation · codes   (shared by /api)
-prisma/      schema.prisma · seed.ts
-vercel.json  .env.example  BACKEND.md
-```
+- Dispatch is a local/courier flag rather than the full courier-company / tracking-number fields; notifications are an in-app feed (no push / SMS / WhatsApp yet); IDs use the shorter `CUS-0001` / `S-42` forms; the UI is a desktop-window metaphor rather than the rail-and-tab responsive layout.
+
+The prototype's own build, data model, and endpoints are documented in **[`README.md`](./README.md)** (setup) and **[`BACKEND.md`](./BACKEND.md)** (schema, API, deploy).
 
 ---
 
-## Design system
+## 10. Delivery roadmap
 
-- **Palette (Punjabi × Tamil Indian):** kumkum maroon `#9a2d3d`, turmeric gold `#bd8420`, mehndi `#6d7a3a`, peacock `#1d6b66`, rani pink `#a83d6c`, on sandalwood ivory. Full light + dark, driven entirely from `tokens.css`.
-- **Typography:** Fraunces (display), Inter (UI), with a mono face for codes/data.
-- **House rules:** custom SVG icons only (no emojis, no lucide), matte surfaces (no neon/glow), no em-dashes in copy.
-- **Motifs:** a faint kolam dot-grid on the desktop, a temple-scallop edge on the showcase ribbon, maroon→gold brand marks.
-
----
-
-## Key decisions & trade-offs
-
-- **Offline-first** — `localStorage` is the source of truth; Postgres is an upgrade. Fits a no-budget, run-anywhere prototype and never shows a blank screen.
-- **Human codes via atomic counters** — customers and orders carry shop-friendly ids minted from a `Counter` row inside a transaction, unique under concurrency.
-- **Eleven functions, on purpose** — the Hobby plan caps a deployment at twelve serverless functions, so routes were merged (stage + payment → one `action`; measurements folded into the customer route) to keep headroom.
-- **Windowed lists + SQL aggregation** — the admin console renders only visible rows and pulls totals from the database, so it stays smooth at thousands of records.
-- **A real window manager** — orders and customer records open as draggable, resizable, stackable windows, not modals.
-- **One codebase, two audiences** — the owner sees the full studio and admin; a family member sees only their own data, decided by the phone they sign in with.
-
----
-
-See also: **[`README.md`](./README.md)** (setup & usage) and **[`BACKEND.md`](./BACKEND.md)** (database & deploy detail).
+| Phase | Scope |
+| --- | --- |
+| **Phase 1 — Core MVP** | Registration & household, versioned measurements, order creation & workflow, payments/balances, in-app notifications. *(This prototype.)* |
+| **Phase 2 — Native & channels** | Flutter iOS/Android, push + SMS/WhatsApp, customer self-service portal, courier dispatch/receipt tracking. |
+| **Phase 3 — Scale & insights** | Multi-branch, staff roles/permissions, reporting dashboards, online payment, offline-first sync for the staff app. |

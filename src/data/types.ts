@@ -14,11 +14,14 @@ export interface Family {
   createdAt: string;
 }
 
+export interface MeasureValue { label: string; value: string }
+
 export interface Measurement {
   id: ID;
+  version: number;       // increments per customer + garment; history is kept, never overwritten
   takenAt: string;       // ISO date — used for the 2-month refresh reminder
   garment: string;       // "Blouse", "Kurta", "Suit"
-  values: { label: string; value: string }[]; // Chest 38", Waist 32" ...
+  values: MeasureValue[]; // Chest 38", Waist 32" ...
   note?: string;
 }
 
@@ -35,7 +38,16 @@ export interface Customer {
 export type MaterialSource = "shop" | "outside";
 export type Fulfilment = "local" | "outside"; // outside → courier dispatch
 export type OrderKind = "stitching" | "sale" | "wedding";
-export type OrderStage = "new" | "cutting" | "stitching" | "ready" | "delivered";
+export type OrderPriority = "normal" | "urgent" | "express";
+// Full lifecycle (Threadline §3.3)
+export type OrderStage = "new" | "material" | "cutting" | "stitching" | "qc" | "ready" | "delivered" | "closed";
+
+// Immutable copy of the measurements used for an order (Threadline §3.2)
+export interface MeasurementSnapshot {
+  garment: string;
+  version?: number;
+  values: MeasureValue[];
+}
 
 export interface Payment {
   id: ID;
@@ -59,7 +71,9 @@ export interface Order {
   samplePhoto?: string;  // emoji/label stand-in for an attached sample
   qty: number;
   stage: OrderStage;
-  deadline: boolean;     // "to be completed first"
+  priority: OrderPriority;         // Normal / Urgent / Express
+  deadline: boolean;              // "to be completed first"
+  measurementSnapshot?: MeasurementSnapshot; // locked at creation
   placedAt: string;
   deliveryDate: string;  // promised date
   price: number;         // agreed total

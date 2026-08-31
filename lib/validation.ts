@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 export const OrderKind = z.enum(["STITCHING", "SALE", "WEDDING"]);
-export const OrderStage = z.enum(["NEW", "CUTTING", "STITCHING", "READY", "DELIVERED"]);
+export const OrderStage = z.enum(["NEW", "MATERIAL", "CUTTING", "STITCHING", "QC", "READY", "DELIVERED", "CLOSED"]);
+export const OrderPriority = z.enum(["NORMAL", "URGENT", "EXPRESS"]);
 export const MaterialSource = z.enum(["SHOP", "OUTSIDE"]);
 export const Fulfilment = z.enum(["LOCAL", "OUTSIDE"]);
 export const PaymentKind = z.enum(["ADVANCE", "BALANCE", "REFUND"]);
@@ -44,7 +45,13 @@ export const orderInput = z.object({
   material: z.string().max(200).optional(),
   samplePhoto: z.string().max(300).optional(),
   qty: z.number().int().positive().max(9999).default(1),
+  priority: OrderPriority.default("NORMAL"),
   deadline: z.boolean().default(false),
+  measurementSnapshot: z.object({
+    garment: z.string().max(120),
+    version: z.number().int().optional(),
+    values: z.array(z.object({ label: z.string().max(40), value: z.string().max(40) })).max(40),
+  }).optional(),
   deliveryDate: z.string().datetime(),
   price: money,
   remarks: z.string().max(500).optional(),

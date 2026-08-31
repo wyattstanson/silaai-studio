@@ -3,10 +3,10 @@ import { useStore } from "../data/store";
 import { Badge, Button, Card, Field, Input, Modal, Segmented, Select, Textarea, Empty, Avatar } from "../components/ui/ui";
 import { Icon } from "../components/Icon";
 import { useWindows } from "../components/windows/WindowManager";
-import { dueBadge } from "./OrderSheet";
-import { STAGE_META, KIND_LABEL } from "../lib/stages";
+import { dueBadge, priorityBadge } from "./OrderSheet";
+import { STAGE_META, KIND_LABEL, isClosed } from "../lib/stages";
 import { inr, balance, daysUntil, fmtDay } from "../lib/format";
-import type { Order, OrderKind, MaterialSource, Fulfilment } from "../data/types";
+import type { Order, OrderKind, OrderPriority, MaterialSource, Fulfilment } from "../data/types";
 import "./modules.css";
 
 type Filter = "all" | "deadline" | "active" | "ready" | "delivered";
@@ -23,10 +23,10 @@ export function Orders() {
 
   const rows = useMemo(() => {
     let list = [...db.orders];
-    if (filter === "deadline") list = list.filter(o => o.stage !== "delivered" && (o.deadline || daysUntil(o.deliveryDate) < 0));
-    else if (filter === "active") list = list.filter(o => o.stage !== "delivered" && o.stage !== "ready");
+    if (filter === "deadline") list = list.filter(o => !isClosed(o.stage) && (o.deadline || o.priority !== "normal" || daysUntil(o.deliveryDate) < 0));
+    else if (filter === "active") list = list.filter(o => !isClosed(o.stage) && o.stage !== "ready");
     else if (filter === "ready") list = list.filter(o => o.stage === "ready");
-    else if (filter === "delivered") list = list.filter(o => o.stage === "delivered");
+    else if (filter === "delivered") list = list.filter(o => isClosed(o.stage));
     if (q.trim()) {
       const t = q.toLowerCase();
       list = list.filter(o => o.garment.toLowerCase().includes(t) || o.code.toLowerCase().includes(t) || custName(o.customerId).toLowerCase().includes(t));
@@ -82,8 +82,9 @@ export function Orders() {
                 <tr key={o.id} onClick={() => openOrder(o)} style={{ cursor: "pointer" }}>
                   <td className="mono muted">{o.code}</td>
                   <td>
-                    <div className="row" style={{ gap: 9 }}>
+                    <div className="row wrap" style={{ gap: 8 }}>
                       <span style={{ fontWeight: 600 }}>{o.garment}</span>
+                      {priorityBadge(o)}
                       {o.deadline && <span className="flag" title="Deadline"><Icon name="flag" size={14} /></span>}
                     </div>
                     <div className="faint" style={{ fontSize: 11.5 }}>{KIND_LABEL[o.kind]} · {o.materialSource === "shop" ? "shop material" : "own material"}</div>
@@ -91,7 +92,7 @@ export function Orders() {
                   <td>
                     <div className="row" style={{ gap: 8 }}><Avatar name={custName(o.customerId)} /><span>{custName(o.customerId)}</span></div>
                   </td>
-                  <td><Badge tone={STAGE_META[o.stage].tone}>{STAGE_META[o.stage].label}</Badge></td>
+                  <td><Badge tone={STAGE_META[o.stage].tone}>{STAGE_META[o.stage].short}</Badge></td>
                   <td><div style={{ fontWeight: 550 }}>{fmtDay(o.deliveryDate)}</div>{dueBadge(o)}</td>
                   <td className="mono" style={{ color: balance(o) > 0 ? "var(--clay)" : "var(--text-faint)", fontWeight: 600 }}>
                     {balance(o) > 0 ? inr(balance(o)) : "Settled"}
@@ -122,6 +123,7 @@ export function Orders() {
     const [deliveryDate, setDeliveryDate] = useState(() => {
       const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().slice(0, 10);
     });
+    const [priority, setPriority] = useState<OrderPriority>("normal");
     const [deadline, setDeadline] = useState(false);
     const [remarks, setRemarks] = useState("");
 
@@ -132,7 +134,7 @@ export function Orders() {
       const o = addOrder({
         customerId, kind, garment: garment.trim(), materialSource, fulfilment,
         material: material.trim() || undefined, design: design.trim() || undefined,
-        qty: Number(qty) || 1, stage: "new", deadline,
+        qty: Number(qty) || 1, stage: "new", priority, deadline: deadline || priority === "express",
         deliveryDate: new Date(deliveryDate).toISOString(), price: Number(price),
         remarks: remarks.trim() || undefined,
       });
@@ -185,6 +187,13 @@ export function Orders() {
           <Field label="Quantity"><Input type="number" min={1} value={qty} onChange={e => setQty(e.target.value)} /></Field>
           <Field label="Delivery date"><Input type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)} /></Field>
         </div>
+        <Field label="Priority">
+          <Select value={priority} onChange={e => setPriority(e.target.value as OrderPriority)}>
+            <option value="normal">Normal</option>
+            <option value="urgent">Urgent</option>
+            <option value="express">Express</option>
+          </Select>
+        </Field>
         <div className="grid-2">
           <Field label="Agreed price (₹)"><Input type="number" min={0} value={price} placeholder="24000" onChange={e => setPrice(e.target.value)} /></Field>
           <Field label="Advance now (₹)"><Input type="number" min={0} value={advance} placeholder="optional" onChange={e => setAdvance(e.target.value)} /></Field>

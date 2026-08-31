@@ -29,10 +29,19 @@ enum OrderKind {
 
 enum OrderStage {
   NEW
+  MATERIAL
   CUTTING
   STITCHING
+  QC
   READY
   DELIVERED
+  CLOSED
+}
+
+enum OrderPriority {
+  NORMAL
+  URGENT
+  EXPRESS
 }
 
 enum MaterialSource {
@@ -143,6 +152,7 @@ model Measurement {
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   takenAt    DateTime @default(now())
+  version    Int      @default(1)
   garment    String
   values     Json // [{ label, value }]
   note       String?
@@ -164,7 +174,9 @@ model Order {
   samplePhoto    String?
   qty            Int            @default(1)
   stage          OrderStage     @default(NEW)
+  priority       OrderPriority  @default(NORMAL)
   deadline       Boolean        @default(false)
+  measurementSnapshot Json?
   placedAt       DateTime       @default(now())
   deliveryDate   DateTime
   price          Int // whole rupees

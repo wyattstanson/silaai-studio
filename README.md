@@ -1,4 +1,6 @@
-# Silai — Tailoring Studio
+# Threadline — Tailoring Studio (Phase-1 prototype)
+
+> This repository is the **Phase-1 interactive prototype** of **Threadline**, a tailoring-shop management application. It implements the Phase-1 scope as a single responsive web app. The authoritative requirements, data schema, and full production architecture live in **[`ARCHITECTURE.md`](./ARCHITECTURE.md)**. (In-app the prototype is still branded "Silai".)
 
 A local-first management app for a family tailoring shop, dressed as a movable **macOS-style desktop**. It runs fully offline on `localStorage` and upgrades to a serverless **Postgres** backend the moment a database is connected — so it works anywhere with zero setup, and scales when you want it to.
 
@@ -10,8 +12,8 @@ Built with a hand-made design system in a **Punjabi × Tamil Indian** palette (k
 
 ## What it does
 
-- **Orders** — every stitching job as a ticket: material source (shop / customer's own), design & remarks, delivery date + alerts, deadline priority, and a stage flow (New → Cutting → Stitching → Ready → Delivered).
-- **Customers & families** — households grouped by a shared phone; per-member measurements with a 2-month refresh reminder.
+- **Orders** — every stitching job as a ticket: material source (shop / customer's own), design & remarks, delivery date + alerts, **Normal / Urgent / Express priority**, and the full **8-stage workflow** (Order Created → Material Received → Cutting → Stitching → Quality Check → Ready → Delivered/Dispatched → Closed).
+- **Customers & families** — households grouped by a shared phone; **versioned** per-garment measurements (history never overwritten) with a 2-month refresh reminder, and an **immutable measurement snapshot locked to each order**.
 - **Payments** — advances, balances, and a full transaction ledger.
 - **Admin console** — a searchable, sortable, **virtualized** customer table (handles thousands of rows) with **CSV / JSON export** and live-editable records.
 - **Service requests** — customers raise requests (new stitching, alteration, pickup, delivery, fitting, consultation, reorder, express, home measurement, remake) with a status timeline; the owner gets an **inbox** to manage them and convert one into an order.

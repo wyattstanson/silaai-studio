@@ -7,8 +7,11 @@ export default route({
   POST: async (req, res) => {
     const customerId = param(req, "id");
     const input = body(req, measurementInput);
+    // versioned per customer + garment; never overwrite history
+    const last = await prisma.measurement.findFirst({ where: { customerId, garment: input.garment }, orderBy: { version: "desc" }, select: { version: true } });
+    const version = (last?.version ?? 0) + 1;
     const measurement = await prisma.measurement.create({
-      data: { customerId, garment: input.garment, values: input.values, note: input.note, takenAt: input.takenAt ? new Date(input.takenAt) : undefined },
+      data: { customerId, version, garment: input.garment, values: input.values, note: input.note, takenAt: input.takenAt ? new Date(input.takenAt) : undefined },
     });
     const c = await prisma.customer.findUnique({ where: { id: customerId }, select: { familyId: true } });
     await prisma.activity.create({ data: { type: "MEASUREMENT", summary: `New measurement recorded, ${input.garment}`, familyId: c?.familyId, customerId } });

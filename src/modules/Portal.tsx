@@ -3,7 +3,7 @@ import { useStore } from "../data/store";
 import { Avatar, Badge, Card, Empty, Stat } from "../components/ui/ui";
 import { Icon, type IconName } from "../components/Icon";
 import { OrderDetail, dueBadge } from "./OrderSheet";
-import { STAGE_META } from "../lib/stages";
+import { STAGE_META, isClosed } from "../lib/stages";
 import { inr, balance, paid, daysUntil, fmtDate, fmtDay, measurementStale } from "../lib/format";
 import type { ActivityType, Order } from "../data/types";
 import "./modules.css";
@@ -24,7 +24,7 @@ export function Portal({ active, go }: { active: string; go: (id: string) => voi
   const orders = useMemo(() => db.orders.filter(o => memberIds.has(o.customerId)), [db.orders, famId]);
   const activity = useMemo(() => db.activity.filter(a => a.familyId === famId), [db.activity, famId]);
 
-  const active_ = orders.filter(o => o.stage !== "delivered");
+  const active_ = orders.filter(o => !isClosed(o.stage));
   const dueDue = orders.reduce((s, o) => s + balance(o), 0);
   const nextDelivery = [...active_].sort((a, b) => daysUntil(a.deliveryDate) - daysUntil(b.deliveryDate))[0];
   const custName = (id: string) => db.customers.find(c => c.id === id)?.name ?? "—";
@@ -71,7 +71,7 @@ export function Portal({ active, go }: { active: string; go: (id: string) => voi
               c.measurements.map(m => (
                 <div key={m.id} style={{ padding: 14 }}>
                   <div className="row" style={{ justifyContent: "space-between" }}>
-                    <b style={{ fontSize: 14 }}>{m.garment}</b>
+                    <b style={{ fontSize: 14 }}>{m.garment} <span className="chip">v{m.version ?? 1}</span></b>
                     {measurementStale(m.takenAt) ? <Badge tone="warn">refresh · {fmtDate(m.takenAt)}</Badge> : <Badge tone="ok">{fmtDate(m.takenAt)}</Badge>}
                   </div>
                   <div className="meas-grid">

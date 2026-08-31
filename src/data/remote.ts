@@ -8,7 +8,7 @@
 import { api } from "./api";
 import type {
   ActivityEvent, ActivityType, Customer, DB, Family, Fulfilment, MaterialSource, Measurement,
-  Order, OrderKind, OrderStage, Payment, RequestStatus, RequestType, ServiceRequest,
+  Order, OrderKind, OrderPriority, OrderStage, Payment, RequestStatus, RequestType, ServiceRequest,
 } from "./types";
 import { seed } from "./seed";
 
@@ -29,7 +29,7 @@ const ACT: Record<string, ActivityType> = {
 export interface Refs { customer: Record<string, string>; order: Record<string, string>; request: Record<string, string> }
 
 function mapMeasurement(m: any): Measurement {
-  return { id: m.id, takenAt: m.takenAt, garment: m.garment, values: Array.isArray(m.values) ? m.values : [], note: m.note ?? undefined };
+  return { id: m.id, version: m.version ?? 1, takenAt: m.takenAt, garment: m.garment, values: Array.isArray(m.values) ? m.values : [], note: m.note ?? undefined };
 }
 function mapPayment(p: any): Payment {
   return { id: p.id, at: p.at, kind: low(p.kind) as Payment["kind"], amount: p.amount, method: low(p.method) as Payment["method"], note: p.note ?? undefined };
@@ -60,7 +60,9 @@ export async function bootstrapDb(): Promise<{ db: DB; refs: Refs }> {
       id: o.code, code: o.code, customerId: codeByCuid[o.customerId] ?? o.customerId,
       kind: KIND(o.kind), garment: o.garment, materialSource: SOURCE(o.materialSource), fulfilment: FULFIL(o.fulfilment),
       design: o.design ?? undefined, material: o.material ?? undefined, samplePhoto: o.samplePhoto ?? undefined,
-      qty: o.qty, stage: STAGE(o.stage), deadline: o.deadline, placedAt: o.placedAt, deliveryDate: o.deliveryDate,
+      qty: o.qty, stage: STAGE(o.stage), priority: low(o.priority ?? "NORMAL") as OrderPriority, deadline: o.deadline,
+      measurementSnapshot: o.measurementSnapshot ?? undefined,
+      placedAt: o.placedAt, deliveryDate: o.deliveryDate,
       price: o.price, remarks: o.remarks ?? undefined, payments: (o.payments ?? []).map(mapPayment),
     };
   });
@@ -108,7 +110,9 @@ export const orderCreate = (o: Omit<Order, "id" | "code" | "payments" | "placedA
   customerId: o.customerId, kind: up(o.kind), garment: o.garment,
   materialSource: up(o.materialSource), fulfilment: up(o.fulfilment),
   design: o.design, material: o.material, samplePhoto: o.samplePhoto,
-  qty: o.qty, deadline: o.deadline, deliveryDate: o.deliveryDate, price: o.price, remarks: o.remarks,
+  qty: o.qty, priority: up(o.priority ?? "normal"), deadline: o.deadline,
+  measurementSnapshot: o.measurementSnapshot,
+  deliveryDate: o.deliveryDate, price: o.price, remarks: o.remarks,
 });
 export const orderPatch = (p: Partial<Order>) => ({
   ...(p.deadline !== undefined ? { deadline: p.deadline } : {}),
@@ -116,7 +120,7 @@ export const orderPatch = (p: Partial<Order>) => ({
   ...(p.remarks !== undefined ? { remarks: p.remarks } : {}),
 });
 export const paymentCreate = (p: Omit<Payment, "id" | "at">) => ({ kind: up(p.kind), amount: p.amount, method: up(p.method), note: p.note });
-export const measurementCreate = (m: Omit<Measurement, "id">) => ({ garment: m.garment, values: m.values, note: m.note, takenAt: m.takenAt });
+export const measurementCreate = (m: Omit<Measurement, "id" | "version">) => ({ garment: m.garment, values: m.values, note: m.note, takenAt: m.takenAt });
 export const stageUp = up;
 
 export const requestCreate = (r: Omit<ServiceRequest, "id" | "code" | "status" | "createdAt" | "updatedAt" | "history">) => ({

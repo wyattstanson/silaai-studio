@@ -140,7 +140,7 @@ function CustomerDetail({ customer, onClose }: { customer: Customer; onClose: ()
         return (
           <div className="meas-card" key={m.id}>
             <div className="row" style={{ justifyContent: "space-between" }}>
-              <div style={{ fontWeight: 600 }}>{m.garment}</div>
+              <div style={{ fontWeight: 600 }}>{m.garment} <span className="chip" style={{ marginLeft: 4 }}>v{m.version ?? 1}</span></div>
               <div className="row" style={{ gap: 8 }}>
                 <span className="faint" style={{ fontSize: 12 }}>{fmtDate(m.takenAt)}</span>
                 {stale ? <Badge tone="warn">refresh · {Math.abs(daysUntil(m.takenAt))}d</Badge> : <Badge tone="ok">fresh</Badge>}

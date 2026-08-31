@@ -17,6 +17,7 @@ import { Requests } from "./modules/Requests";
 import { OrderDetail } from "./modules/OrderSheet";
 import { CustomerAdmin } from "./modules/CustomerAdmin";
 import { Empty } from "./components/ui/ui";
+import { isClosed } from "./lib/stages";
 
 /* Content for a floating window; subscribes to the store so windows stay live. */
 function WindowContent({ win, readOnly }: { win: WinState; readOnly: boolean }) {
@@ -34,7 +35,7 @@ function Studio({ onShowcase }: { onShowcase: () => void }) {
   const { db, logout } = useStore();
   const [active, setActive] = useState("dashboard");
   const on = (id: string) => db.modules.find(m => m.id === id)?.enabled;
-  const activeOrders = db.orders.filter(o => o.stage !== "delivered").length;
+  const activeOrders = db.orders.filter(o => !isClosed(o.stage)).length;
 
   const nav: NavItem[] = [{ id: "dashboard", label: "Overview", icon: "overview", group: "Studio", tone: "neutral" }];
   if (on("tailoring")) {
@@ -77,7 +78,7 @@ function MemberPortal({ onShowcase }: { onShowcase: () => void }) {
   const { db, user, logout } = useStore();
   const [active, setActive] = useState("portal");
   const memberIds = new Set(db.customers.filter(c => c.familyId === user?.familyId).map(c => c.id));
-  const activeOrders = db.orders.filter(o => memberIds.has(o.customerId) && o.stage !== "delivered").length;
+  const activeOrders = db.orders.filter(o => memberIds.has(o.customerId) && !isClosed(o.stage)).length;
 
   const openReq = db.requests.filter(r => r.familyId === user?.familyId && ["submitted", "acknowledged", "scheduled", "in_progress"].includes(r.status)).length;
   const nav: NavItem[] = [

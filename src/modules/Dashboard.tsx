@@ -4,7 +4,7 @@ import { Card, Stat, Badge, Avatar } from "../components/ui/ui";
 import { Icon } from "../components/Icon";
 import { useWindows } from "../components/windows/WindowManager";
 import { dueBadge } from "./OrderSheet";
-import { STAGE_META } from "../lib/stages";
+import { STAGE_META, isClosed } from "../lib/stages";
 import { inr, balance, daysUntil, measurementStale, fmtDay } from "../lib/format";
 import type { Order } from "../data/types";
 import "./modules.css";
@@ -14,7 +14,7 @@ export function Dashboard({ go }: { go: (id: string) => void }) {
   const wm = useWindows();
   const openOrder = (o: Order) => wm.open({ kind: "order", key: o.id, title: o.garment, subtitle: o.code, payload: { orderId: o.id }, w: 460, h: 560 });
 
-  const active = db.orders.filter(o => o.stage !== "delivered");
+  const active = db.orders.filter(o => !isClosed(o.stage));
   const dueWeek = active.filter(o => { const d = daysUntil(o.deliveryDate); return d >= 0 && d <= 7; });
   const outstanding = db.orders.reduce((s, o) => s + balance(o), 0);
   const flagged = active.filter(o => o.deadline || daysUntil(o.deliveryDate) < 0);

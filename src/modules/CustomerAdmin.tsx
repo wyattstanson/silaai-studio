@@ -75,7 +75,7 @@ export function CustomerAdmin({ customerId }: { customerId: string }) {
         {customer.measurements.map(m => (
           <div className="meas-card" key={m.id} style={{ marginTop: 8 }}>
             <div className="row" style={{ justifyContent: "space-between" }}>
-              <b style={{ fontSize: 13.5 }}>{m.garment}</b>
+              <b style={{ fontSize: 13.5 }}>{m.garment} <span className="chip">v{m.version ?? 1}</span></b>
               {measurementStale(m.takenAt) ? <Badge tone="warn">refresh · {fmtDate(m.takenAt)}</Badge> : <Badge tone="ok">{fmtDate(m.takenAt)}</Badge>}
             </div>
             <div className="meas-grid">
