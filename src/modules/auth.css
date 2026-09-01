@@ -1,47 +1,119 @@
+/* ============================================================
+   Silai — Sign-in: liquid-glass modal over a festive light field.
+   A frosted, translucent card floats on soft marigold/kumkum/sage
+   light. Depth from layered edges and an inner top highlight, not
+   from decorative motion. Solid fallback under reduced-transparency.
+   ============================================================ */
+
 .auth {
   position: relative;
   min-height: 100%;
   display: grid; place-items: center; padding: 28px;
+  overflow: hidden;
+  background: var(--app-bg);
+}
+/* Festive light field behind the glass (static). */
+.auth::before {
+  content: ""; position: absolute; inset: -10%; z-index: 0; pointer-events: none;
   background:
-    radial-gradient(1000px 560px at 80% -8%, color-mix(in srgb, var(--acacia) 24%, transparent), transparent 58%),
-    radial-gradient(820px 520px at 6% 106%, color-mix(in srgb, var(--sage) 18%, transparent), transparent 55%),
-    var(--app-bg);
+    radial-gradient(42% 46% at 20% 18%, color-mix(in srgb, var(--acacia)  46%, transparent), transparent 66%),
+    radial-gradient(40% 44% at 82% 24%, color-mix(in srgb, var(--maroon)  40%, transparent), transparent 68%),
+    radial-gradient(46% 50% at 74% 84%, color-mix(in srgb, var(--sage)    34%, transparent), transparent 70%),
+    radial-gradient(40% 44% at 22% 82%, color-mix(in srgb, var(--peacock) 30%, transparent), transparent 72%);
+  filter: blur(30px) saturate(1.1);
 }
+:root[data-theme="dark"] .auth::before { opacity: 0.7; }
+
 .auth-theme {
-  position: absolute; top: 20px; right: 22px;
-  width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center;
-  border: 1px solid var(--hairline); background: var(--surface); color: var(--text-soft);
-  cursor: pointer; box-shadow: var(--sh-1); transition: background .15s, color .15s;
+  position: absolute; top: 20px; right: 22px; z-index: 3;
+  width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+  color: var(--text-soft); cursor: pointer; box-shadow: var(--sh-1); transition: background .15s, color .15s;
 }
-.auth-theme:hover { background: var(--surface-2); color: var(--text); }
+.auth-theme:hover { background: color-mix(in srgb, var(--surface) 75%, transparent); color: var(--text); }
+
+/* ---- the glass card --------------------------------------- */
 .auth-card {
+  position: relative; z-index: 2;
   width: min(420px, 100%);
-  background: var(--surface); border: 1px solid var(--hairline);
-  border-radius: 22px; box-shadow: var(--sh-window); overflow: hidden;
+  border-radius: 24px; overflow: hidden;
+  background: color-mix(in srgb, var(--window-bg) 58%, transparent);
+  -webkit-backdrop-filter: blur(34px) saturate(1.7);
+  backdrop-filter: blur(34px) saturate(1.7);
+  border: 1px solid rgba(255,255,255,0.22);
+  box-shadow:
+    var(--sh-window),
+    inset 0 1px 0 rgba(255,255,255,0.45),
+    inset 0 0 0 1px rgba(255,255,255,0.05);
 }
-.auth-top { padding: 26px 26px 6px; text-align: center; }
-.auth-top .mark { width: 46px; height: 46px; margin: 0 auto 12px; border-radius: 13px; background: linear-gradient(150deg, var(--maroon), var(--acacia)); color: #fdf6e6; display: grid; place-items: center; font-family: var(--font-display); font-size: 24px; box-shadow: var(--sh-1), inset 0 0 0 1px rgba(255,255,255,0.14); }
-.auth-top h2 { font-size: 22px; }
+:root[data-theme="dark"] .auth-card {
+  background: color-mix(in srgb, var(--surface) 46%, transparent);
+  border-color: rgba(255,255,255,0.12);
+  box-shadow:
+    var(--sh-window),
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 0 0 1px rgba(255,255,255,0.03);
+}
+/* A soft specular sheen across the top edge (static, like real glass). */
+.auth-card::after {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 46%; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.16), transparent);
+}
+:root[data-theme="dark"] .auth-card::after { background: linear-gradient(180deg, rgba(255,255,255,0.06), transparent); }
+
+/* Solid, legible fallback when the browser/user disables transparency. */
+@media (prefers-reduced-transparency: reduce) {
+  .auth-card { background: var(--window-bg); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .auth-theme { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .auth::before { display: none; }
+}
+
+.auth-top { position: relative; padding: 28px 26px 6px; text-align: center; }
+.auth-top .mark {
+  width: 48px; height: 48px; margin: 0 auto 12px; border-radius: 14px;
+  background: var(--maroon); color: #fdf6e6; display: grid; place-items: center;
+  font-family: var(--font-display); font-size: 25px;
+  box-shadow: var(--sh-2), inset 0 1px 0 rgba(255,255,255,0.22);
+}
+.auth-top h2 { font-size: 23px; }
 .auth-top p { color: var(--text-soft); font-size: 13.5px; margin: 6px 0 0; }
-.auth-body { padding: 18px 26px 24px; display: grid; gap: 14px; }
+.auth-body { position: relative; padding: 18px 26px 24px; display: grid; gap: 14px; }
 .auth-seg { display: flex; justify-content: center; margin-top: 14px; }
-.phone-field { display: flex; align-items: stretch; border: 1px solid var(--hairline); border-radius: var(--r-sm); overflow: hidden; background: var(--surface); }
+
+/* Fields sit as inset glass wells. */
+.phone-field {
+  display: flex; align-items: stretch; border-radius: var(--r-sm); overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--hairline) 70%, transparent);
+  background: color-mix(in srgb, var(--surface) 40%, transparent);
+}
 .phone-field:focus-within { border-color: var(--acacia); box-shadow: var(--ring); }
-.phone-field .cc { display: grid; place-items: center; padding: 0 12px; background: var(--surface-2); border-right: 1px solid var(--hairline); font-size: 13.5px; color: var(--text-soft); font-weight: 600; }
+.phone-field .cc { display: grid; place-items: center; padding: 0 12px; background: color-mix(in srgb, var(--surface-2) 55%, transparent); border-right: 1px solid var(--hairline); font-size: 13.5px; color: var(--text-soft); font-weight: 600; }
 .phone-field input { border: none; outline: none; background: transparent; padding: 11px 12px; font-size: 15px; width: 100%; color: var(--text); letter-spacing: 0.04em; }
 .otp { display: flex; gap: 10px; justify-content: center; }
-.otp input { width: 46px; height: 54px; text-align: center; font-size: 22px; font-weight: 600; border: 1px solid var(--hairline); border-radius: 12px; background: var(--surface); color: var(--text); }
+.otp input {
+  width: 46px; height: 54px; text-align: center; font-size: 22px; font-weight: 600;
+  border: 1px solid color-mix(in srgb, var(--hairline) 70%, transparent); border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 40%, transparent); color: var(--text);
+}
 .otp input:focus { outline: none; border-color: var(--acacia); box-shadow: var(--ring); }
 .auth-err { background: var(--urgent-bg); color: var(--clay); font-size: 13px; padding: 9px 12px; border-radius: 9px; }
 .auth-hint { font-size: 12px; color: var(--text-faint); text-align: center; line-height: 1.6; }
-.auth-hint code { background: var(--surface-2); padding: 1px 6px; border-radius: 5px; border: 1px solid var(--hairline); cursor: pointer; }
+.auth-hint code { background: color-mix(in srgb, var(--surface-2) 60%, transparent); padding: 1px 6px; border-radius: 5px; border: 1px solid var(--hairline); cursor: pointer; }
+
 .household { display: flex; flex-direction: column; gap: 8px; }
-.hh-row { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; cursor: pointer; padding: 9px 12px; border-radius: var(--r-sm); border: 1px solid var(--hairline); background: var(--surface); color: var(--text); transition: background .13s, border-color .13s, transform .1s; }
-.hh-row:hover { background: var(--surface-2); border-color: color-mix(in srgb, var(--acacia) 40%, var(--hairline)); }
-.hh-row:active { transform: translateY(0.5px); }
+.hh-row {
+  display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; cursor: pointer;
+  padding: 10px 12px; border-radius: var(--r-sm); color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--hairline) 70%, transparent);
+  background: color-mix(in srgb, var(--surface) 42%, transparent);
+  transition: background .13s, border-color .13s;
+}
+.hh-row:hover { background: color-mix(in srgb, var(--surface) 70%, transparent); border-color: color-mix(in srgb, var(--acacia) 45%, var(--hairline)); }
 .hh-row .grow { flex: 1; min-width: 0; }
 .hh-name { font-weight: 600; font-size: 14px; }
 .hh-id { font-size: 12px; color: var(--text-faint); font-family: var(--font-mono, monospace); }
 
-.auth-foot { text-align: center; padding: 0 26px 22px; }
+.auth-foot { position: relative; text-align: center; padding: 0 26px 22px; }
 .auth-foot button { background: none; border: none; color: var(--text-soft); font-size: 13px; cursor: pointer; text-decoration: underline; }

@@ -4,7 +4,7 @@ import { useWindows } from "../components/windows/WindowManager";
 import { Avatar, Badge, Button, Field, Input, Select } from "../components/ui/ui";
 import { Icon } from "../components/Icon";
 import { STAGE_META } from "../lib/stages";
-import { inr, balance, paid, fmtDate, measurementStale } from "../lib/format";
+import { inr, balance, paid, fmtDate, measurementStale, phoneDigits, phoneLocal, phoneIntl } from "../lib/format";
 import { exportCustomerCSV, exportCustomerJSON } from "../lib/exportData";
 import "./modules.css";
 
@@ -17,7 +17,7 @@ export function CustomerAdmin({ customerId }: { customerId: string }) {
 
   // controlled edit fields, seeded from record
   const [name, setName] = useState(customer?.name ?? "");
-  const [phone, setPhone] = useState(customer?.phone ?? "");
+  const [phone, setPhone] = useState(phoneDigits(customer?.phone ?? ""));
   const [gender, setGender] = useState(customer?.gender ?? "—");
   const [dirty, setDirty] = useState(false);
   const [addM, setAddM] = useState(false);
@@ -27,7 +27,7 @@ export function CustomerAdmin({ customerId }: { customerId: string }) {
   const billed = orders.reduce((s, o) => s + o.price, 0);
   const outstanding = orders.reduce((s, o) => s + balance(o), 0);
   const edit = (fn: () => void) => { fn(); setDirty(true); };
-  const save = () => { updateCustomer(customer.id, { name: name.trim() || customer.name, phone: phone.trim() || undefined, gender: gender as any }); setDirty(false); };
+  const save = () => { updateCustomer(customer.id, { name: name.trim() || customer.name, phone: phoneIntl(phone) || undefined, gender: gender as any }); setDirty(false); };
 
   return (
     <div className="ca">
@@ -56,7 +56,7 @@ export function CustomerAdmin({ customerId }: { customerId: string }) {
         </div>
         <div className="grid-2" style={{ marginTop: 8 }}>
           <Field label="Name"><Input value={name} onChange={e => edit(() => setName(e.target.value))} /></Field>
-          <Field label="Phone"><Input value={phone} placeholder={family?.phone} onChange={e => edit(() => setPhone(e.target.value))} /></Field>
+          <Field label="Phone"><div className="phone-inl"><span>+91</span><Input inputMode="numeric" value={phoneLocal(phone)} placeholder={phoneDigits(family?.phone ?? "") ? phoneLocal(family?.phone ?? "") : "98765 43210"} onChange={e => edit(() => setPhone(phoneDigits(e.target.value)))} /></div></Field>
           <Field label="Gender">
             <Select value={gender} onChange={e => edit(() => setGender(e.target.value as any))}>
               <option value="F">Female</option><option value="M">Male</option><option value="—">—</option>

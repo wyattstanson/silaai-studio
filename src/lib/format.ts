@@ -36,3 +36,18 @@ export function measurementStale(iso: string): boolean {
 
 export const sumPayments = (ps: Payment[]) =>
   ps.reduce((s, p) => s + (p.kind === "refund" ? -p.amount : p.amount), 0);
+
+/** Keep only digits, capped at a 10-digit Indian mobile number. */
+export const phoneDigits = (s: string) => s.replace(/\D/g, "").slice(0, 10);
+
+/** Format a local number for display as "98110 20304". */
+export const phoneLocal = (s: string) => {
+  const d = phoneDigits(s);
+  return d.length > 5 ? `${d.slice(0, 5)} ${d.slice(5)}` : d;
+};
+
+/** Store form: "+91 98110 20304", or "" when nothing valid was entered. */
+export const phoneIntl = (s: string) => {
+  const d = phoneDigits(s);
+  return d ? `+91 ${phoneLocal(d)}` : "";
+};

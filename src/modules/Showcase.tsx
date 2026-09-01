@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useStore } from "../data/store";
 import { Button } from "../components/ui/ui";
 import { Icon } from "../components/Icon";
@@ -6,6 +7,52 @@ import { inr } from "../lib/format";
 import "./showcase.css";
 
 const scrollTop = () => document.querySelector(".sc")?.scrollTo({ top: 0, behavior: "smooth" });
+
+/* Reveal-on-scroll + a light hero parallax.
+   Progressive enhancement: content is visible by default and only hidden
+   once JS marks the container `reveal-ready`, so a JS/observer failure can
+   never leave a blank page. Uses scroll + rAF (reliable everywhere) plus a
+   safety timeout, and is skipped entirely under prefers-reduced-motion. */
+function useScrollChrome(scRef: React.RefObject<HTMLDivElement>, figRef: React.RefObject<HTMLDivElement>) {
+  useEffect(() => {
+    const root = scRef.current;
+    if (!root) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const els = Array.from(root.querySelectorAll<HTMLElement>("[data-reveal]"));
+    root.classList.add("reveal-ready");
+
+    if (reduce) { els.forEach(e => e.classList.add("rv-in")); return; }
+
+    const reveal = () => {
+      const vh = window.innerHeight;
+      for (const e of els) {
+        if (e.classList.contains("rv-in")) continue;
+        if (e.getBoundingClientRect().top < vh * 0.9) e.classList.add("rv-in");
+      }
+    };
+
+    let raf = 0;
+    const onScroll = () => {
+      if (figRef.current) figRef.current.style.transform = `translateY(${Math.min(root.scrollTop * 0.05, 40)}px)`;
+      if (raf) return;
+      raf = requestAnimationFrame(() => { raf = 0; reveal(); });
+    };
+
+    reveal();                         // above-the-fold, immediately
+    requestAnimationFrame(reveal);    // after first paint
+    root.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", reveal);
+    // safety net: never leave anything hidden, whatever the environment
+    const safety = window.setTimeout(() => els.forEach(e => e.classList.add("rv-in")), 2400);
+
+    return () => {
+      root.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", reveal);
+      window.clearTimeout(safety);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [scRef, figRef]);
+}
 
 const PIECES: { type: GarmentType; palette: string; name: string; fabric: string; price: number; tag: string }[] = [
   { type: "lehenga", palette: "maroon", name: "Zardozi Bridal Lehenga", fabric: "Raw silk · hand embroidery", price: 24000, tag: "Bridal" },
@@ -21,9 +68,12 @@ const PIECES: { type: GarmentType; palette: string; name: string; fabric: string
 export function Showcase({ onEnter, onBack, loggedIn }: { onEnter: () => void; onBack?: () => void; loggedIn?: boolean }) {
   const { db, theme, toggleTheme } = useStore();
   const stitched = db.orders.length + 148;
+  const scRef = useRef<HTMLDivElement>(null);
+  const figRef = useRef<HTMLDivElement>(null);
+  useScrollChrome(scRef, figRef);
 
   return (
-    <div className="sc">
+    <div className="sc" ref={scRef}>
       <div className="sc-bar">
         <button className="logo" onClick={scrollTop} aria-label="Back to top"><span className="mark">S</span> Silai</button>
         <div className="grow" />
@@ -38,23 +88,19 @@ export function Showcase({ onEnter, onBack, loggedIn }: { onEnter: () => void; o
       </div>
 
       <div className="ribbon">
-        <div className="track">
-          {[0, 1].map(k => (
-            <span key={k} style={{ display: "inline-flex", gap: 40, alignItems: "center" }}>
-              <span>Handcrafted</span><i className="rdot" />
-              <span>Bespoke Tailoring</span><i className="rdot" />
-              <span>Bridal &amp; Wedding</span><i className="rdot" />
-              <span>Est. 24BCE</span><i className="rdot" />
-              <span>Measured to You</span><i className="rdot" />
-            </span>
-          ))}
+        <div className="strip">
+          <span>Handcrafted</span><i className="rdot" />
+          <span>Bespoke Tailoring</span><i className="rdot" />
+          <span>Bridal &amp; Wedding</span><i className="rdot" />
+          <span>Est. 24BCE</span><i className="rdot" />
+          <span>Measured to You</span>
         </div>
       </div>
 
       <div className="sc-inner">
         {/* HERO */}
         <section className="hero">
-          <div>
+          <div data-reveal>
             <span className="eyebrow">Silai · Tailoring Studio</span>
             <h1>Where fabric<br />becomes <em>heirloom</em>.</h1>
             <p>
@@ -66,7 +112,7 @@ export function Showcase({ onEnter, onBack, loggedIn }: { onEnter: () => void; o
               <a href="#gallery"><Button>View collection</Button></a>
             </div>
           </div>
-          <div className="hero-figure" aria-hidden>
+          <div className="hero-figure" aria-hidden ref={figRef} data-reveal style={{ transitionDelay: "0.08s" }}>
             {(["lehenga", "sherwani", "saree", "anarkali", "kurta", "blouse"] as GarmentType[]).map((t, i) => (
               <div className="h-cell" key={i}><GarmentArt type={t} palette={["maroon", "cream", "sage", "ochre", "indigo", "clay"][i] as any} /></div>
             ))}
@@ -75,16 +121,16 @@ export function Showcase({ onEnter, onBack, loggedIn }: { onEnter: () => void; o
 
         {/* STATS */}
         <div className="strip">
-          <div className="s"><b>{stitched}+</b><span>garments stitched</span></div>
-          <div className="s"><b>{db.families.length + 60}</b><span>families served</span></div>
-          <div className="s"><b>12</b><span>years of craft</span></div>
-          <div className="s"><b>48h</b><span>express fittings</span></div>
+          <div className="s" data-reveal><b>{stitched}+</b><span>garments stitched</span></div>
+          <div className="s" data-reveal style={{ transitionDelay: "0.06s" }}><b>{db.families.length + 60}</b><span>families served</span></div>
+          <div className="s" data-reveal style={{ transitionDelay: "0.12s" }}><b>12</b><span>years of craft</span></div>
+          <div className="s" data-reveal style={{ transitionDelay: "0.18s" }}><b>48h</b><span>express fittings</span></div>
         </div>
 
         {/* GALLERY */}
         <section className="gallery" id="gallery">
           <div className="sc-head">
-            <div>
+            <div data-reveal>
               <span className="eyebrow">The Collection</span>
               <h2>Our recent work</h2>
               <p>A glimpse of pieces from the studio, every one made to measure.</p>
@@ -92,7 +138,7 @@ export function Showcase({ onEnter, onBack, loggedIn }: { onEnter: () => void; o
           </div>
           <div className="g-grid">
             {PIECES.map((pc, i) => (
-              <article className="g-card" key={i}>
+              <article className="g-card" key={i} data-reveal style={{ transitionDelay: `${(i % 4) * 0.06}s` }}>
                 <div className="g-art"><GarmentArt type={pc.type} palette={pc.palette as any} /></div>
                 <div className="g-meta">
                   <div className="g-name">{pc.name}</div>
@@ -110,31 +156,31 @@ export function Showcase({ onEnter, onBack, loggedIn }: { onEnter: () => void; o
         {/* CONTACT */}
         <section className="contact" id="contact">
           <div className="sc-head">
-            <div>
+            <div data-reveal>
               <span className="eyebrow">Say hello</span>
               <h2>Visit the studio</h2>
               <p>Walk in for a fitting, or reach us any way you like.</p>
             </div>
           </div>
           <div className="bubbles">
-            <a className="bubble" href={`tel:${db.shop.phone.replace(/\s+/g, "")}`} style={{ ["--tone" as any]: "var(--acacia)" }}>
+            <a className="bubble" data-reveal href={`tel:${db.shop.phone.replace(/\s+/g, "")}`} style={{ ["--tone" as any]: "var(--acacia)" }}>
               <div className="b-ico"><Icon name="phone" size={20} /></div>
               <h4>Call &amp; WhatsApp</h4>
               <span className="b-link">{db.shop.phone}</span>
               <p>Mon to Sat, 10am to 8pm</p>
             </a>
-            <div className="bubble" style={{ ["--tone" as any]: "var(--sage)" }}>
+            <div className="bubble" data-reveal style={{ ["--tone" as any]: "var(--sage)", transitionDelay: "0.06s" }}>
               <div className="b-ico"><Icon name="mail" size={20} /></div>
               <h4>Email us</h4>
               <a href="mailto:hello@silaistudio.in">hello@silaistudio.in</a>
               <a href="mailto:orders@silaistudio.in">orders@silaistudio.in</a>
             </div>
-            <a className="bubble" href="https://maps.google.com/?q=Katpadi+Vellore" target="_blank" rel="noreferrer" style={{ ["--tone" as any]: "var(--clay)" }}>
+            <a className="bubble" data-reveal href="https://maps.google.com/?q=Katpadi+Vellore" target="_blank" rel="noreferrer" style={{ ["--tone" as any]: "var(--clay)", transitionDelay: "0.12s" }}>
               <div className="b-ico"><Icon name="pin" size={20} /></div>
               <h4>Find us</h4>
               <p>12, Weavers Lane<br />Katpadi, Vellore 632014</p>
             </a>
-            <div className="bubble" style={{ ["--tone" as any]: "var(--plum)" }}>
+            <div className="bubble" data-reveal style={{ ["--tone" as any]: "var(--plum)", transitionDelay: "0.18s" }}>
               <div className="b-ico"><Icon name="spark" size={20} /></div>
               <h4>Follow the craft</h4>
               <p>@silaistudio</p>

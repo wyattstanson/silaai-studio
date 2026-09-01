@@ -37,21 +37,19 @@
 .dock-ico {
   width: 40px; height: 40px; border-radius: 11px;
   display: grid; place-items: center; color: var(--text-soft);
-  background: linear-gradient(160deg, var(--surface), var(--surface-2));
+  background: var(--surface);
   border: 1px solid var(--hairline);
-  box-shadow: var(--sh-1);
-  transition: box-shadow .2s var(--ease), color .2s;
+  box-shadow: var(--sh-1), inset 0 1px 0 rgba(255,255,255,0.10);
+  transition: transform .18s var(--ease), box-shadow .18s var(--ease), color .18s, background .18s;
 }
-.dock-item[data-tone="accent"] .dock-ico { color: var(--acacia-deep); background: linear-gradient(160deg, color-mix(in srgb, var(--acacia) 18%, var(--surface)), var(--surface-2)); }
-.dock-item[data-tone="sage"] .dock-ico   { color: var(--sage-deep); background: linear-gradient(160deg, color-mix(in srgb, var(--sage) 18%, var(--surface)), var(--surface-2)); }
-.dock-item[data-tone="clay"] .dock-ico   { color: var(--clay); background: linear-gradient(160deg, color-mix(in srgb, var(--clay) 16%, var(--surface)), var(--surface-2)); }
+.dock-item[data-tone="accent"] .dock-ico { color: var(--acacia-deep); background: color-mix(in srgb, var(--acacia) 12%, var(--surface)); }
+.dock-item[data-tone="sage"] .dock-ico   { color: var(--sage-deep); background: color-mix(in srgb, var(--sage) 12%, var(--surface)); }
+.dock-item[data-tone="clay"] .dock-ico   { color: var(--clay); background: color-mix(in srgb, var(--clay) 11%, var(--surface)); }
 :root[data-theme="dark"] .dock-item[data-tone="accent"] .dock-ico { color: var(--acacia); }
 :root[data-theme="dark"] .dock-item[data-tone="sage"] .dock-ico { color: var(--sage); }
 
-/* Magnify: hovered grows, immediate neighbours grow a little */
-.dock-item:hover { transform: scale(1.42) translateY(-10px); }
-.dock-item:hover + .dock-item,
-.dock-item:has(+ .dock-item:hover) { transform: scale(1.18) translateY(-4px); }
+/* Restrained hover: a small, honest lift toward the pointer. */
+.dock-item:hover { transform: translateY(-5px); }
 .dock-item:hover .dock-ico { box-shadow: var(--sh-3); }
 
 /* running / active dot */

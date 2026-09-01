@@ -57,7 +57,7 @@ function Studio({ onShowcase }: { onShowcase: () => void }) {
 
   return (
     <Shell nav={nav} active={view} onNavigate={setActive} crumb={crumb} onShowcase={onShowcase} onLogout={logout}
-      renderWindow={win => <WindowContent win={win} readOnly={false} />}>
+      viewKey={view} renderWindow={win => <WindowContent win={win} readOnly={false} />}>
       {view === "dashboard" && <Dashboard go={setActive} />}
       {view === "orders" && <Orders />}
       {view === "customers" && <Customers />}
@@ -93,7 +93,7 @@ function MemberPortal({ onShowcase }: { onShowcase: () => void }) {
 
   return (
     <Shell nav={nav} active={view} onNavigate={setActive} crumb={crumb} onShowcase={onShowcase} onLogout={logout} canManage={false}
-      renderWindow={win => <WindowContent win={win} readOnly />}>
+      viewKey={view} renderWindow={win => <WindowContent win={win} readOnly />}>
       {view === "requests" ? <Requests /> : <Portal active={view} go={setActive} />}
     </Shell>
   );

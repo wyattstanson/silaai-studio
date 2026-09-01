@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useStore } from "../data/store";
 import { Avatar, Badge, Button, Card, Field, Input, Modal, Select, Textarea, Empty } from "../components/ui/ui";
 import { Icon } from "../components/Icon";
-import { fmtDate, measurementStale, daysUntil } from "../lib/format";
+import { fmtDate, measurementStale, daysUntil, phoneDigits, phoneLocal, phoneIntl } from "../lib/format";
 import type { Customer } from "../data/types";
 import "./modules.css";
 
@@ -88,9 +88,9 @@ export function Customers() {
     return (
       <Modal title="New family" onClose={onClose}
         footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" disabled={!name.trim() || !phone.trim()} onClick={() => { addFamily({ name: name.trim(), phone: phone.trim(), note: note.trim() || undefined }); onClose(); }}>Add family</Button></>}>
+          <Button variant="primary" disabled={!name.trim() || phoneDigits(phone).length !== 10} onClick={() => { addFamily({ name: name.trim(), phone: phoneIntl(phone), note: note.trim() || undefined }); onClose(); }}>Add family</Button></>}>
         <Field label="Household name"><Input value={name} placeholder="Sharma Household" onChange={e => setName(e.target.value)} /></Field>
-        <Field label="Shared phone"><Input value={phone} placeholder="+91 …" onChange={e => setPhone(e.target.value)} /></Field>
+        <Field label="Shared phone"><div className="phone-inl"><span>+91</span><Input inputMode="numeric" value={phoneLocal(phone)} placeholder="98765 43210" onChange={e => setPhone(phoneDigits(e.target.value))} /></div></Field>
         <Field label="Note"><Input value={note} placeholder="optional" onChange={e => setNote(e.target.value)} /></Field>
       </Modal>
     );
@@ -101,10 +101,10 @@ export function Customers() {
     return (
       <Modal title="New member" onClose={onClose}
         footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" disabled={!name.trim()} onClick={() => { const c = addCustomer({ familyId, name: name.trim(), phone: phone.trim() || undefined, gender }); onClose(); setDetail(c); }}>Add member</Button></>}>
+          <Button variant="primary" disabled={!name.trim() || (phone.length > 0 && phoneDigits(phone).length !== 10)} onClick={() => { const c = addCustomer({ familyId, name: name.trim(), phone: phoneIntl(phone) || undefined, gender }); onClose(); setDetail(c); }}>Add member</Button></>}>
         <Field label="Name"><Input value={name} placeholder="Full name" onChange={e => setName(e.target.value)} /></Field>
         <div className="grid-2">
-          <Field label="Own phone"><Input value={phone} placeholder="falls back to family" onChange={e => setPhone(e.target.value)} /></Field>
+          <Field label="Own phone"><div className="phone-inl"><span>+91</span><Input inputMode="numeric" value={phoneLocal(phone)} placeholder="falls back to family" onChange={e => setPhone(phoneDigits(e.target.value))} /></div></Field>
           <Field label="Gender"><Select value={gender} onChange={e => setGender(e.target.value as any)}><option value="F">Female</option><option value="M">Male</option><option value="—">—</option></Select></Field>
         </div>
       </Modal>

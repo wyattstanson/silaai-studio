@@ -15,29 +15,6 @@ export interface NavItem {
   tone?: "accent" | "sage" | "clay" | "neutral";
 }
 
-const BUBBLES = [
-  { top: "12%", left: "8%", size: 260, c: "var(--acacia)", d: 26 },
-  { top: "58%", left: "2%", size: 200, c: "var(--sage)", d: 32 },
-  { top: "70%", left: "72%", size: 300, c: "var(--clay)", d: 30 },
-  { top: "6%", left: "68%", size: 240, c: "var(--acacia)", d: 36 },
-  { top: "38%", left: "44%", size: 180, c: "var(--sage)", d: 24 },
-  { top: "82%", left: "40%", size: 150, c: "var(--acacia)", d: 28 },
-];
-
-function Bubbles() {
-  return (
-    <div className="bubbles-bg" aria-hidden>
-      {BUBBLES.map((b, i) => (
-        <span className="bubble-b" key={i} style={{
-          top: b.top, left: b.left, width: b.size, height: b.size,
-          background: `radial-gradient(circle at 32% 30%, color-mix(in srgb, ${b.c} 60%, transparent), transparent 70%)`,
-          animationDuration: `${b.d}s`, animationDelay: `${-i * 3}s`,
-        }} />
-      ))}
-    </div>
-  );
-}
-
 function Clock() {
   const [now, setNow] = useState(new Date());
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 30_000); return () => clearInterval(t); }, []);
@@ -47,7 +24,7 @@ function Clock() {
 }
 
 export function Shell({
-  nav, active, onNavigate, crumb, children, onShowcase, onLogout, canManage = true, renderWindow,
+  nav, active, onNavigate, crumb, children, onShowcase, onLogout, canManage = true, renderWindow, viewKey,
 }: {
   nav: NavItem[];
   active: string;
@@ -58,6 +35,7 @@ export function Shell({
   onLogout: () => void;
   canManage?: boolean;
   renderWindow?: (win: WinState) => ReactNode;
+  viewKey?: string;
 }) {
   const { db, user, theme, toggleTheme, mode } = useStore();
   const { pos, setPos, onDown } = useDrag(null);
@@ -98,7 +76,6 @@ export function Shell({
 
   return (
     <div className="desk">
-      <Bubbles />
 
       <div className="menubar">
         <span className="mb-brand"><Icon name="needle" size={15} className="glyph" /> {db.shop.name}</span>
@@ -164,7 +141,7 @@ export function Shell({
         </aside>
 
         <main className="main" data-no-drag>
-          <div className="main-inner">{children}</div>
+          <div className="main-inner" key={viewKey ?? crumb}>{children}</div>
         </main>
       </div>
 

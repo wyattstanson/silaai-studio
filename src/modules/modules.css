@@ -61,6 +61,9 @@
 .meas-cell { background: var(--surface); border: 1px solid var(--hairline); border-radius: 8px; padding: 7px 9px; }
 .meas-cell .m-lbl { font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; }
 .meas-cell .m-val { font-size: 15px; font-weight: 600; font-family: var(--font-display); }
+.phone-inl { display: flex; align-items: stretch; }
+.phone-inl > span { display: grid; place-items: center; padding: 0 11px; font-size: 13px; font-weight: 600; color: var(--text-soft); background: var(--surface-2); border: 1px solid var(--hairline); border-right: none; border-radius: var(--r-sm) 0 0 var(--r-sm); }
+.phone-inl .input { border-radius: 0 var(--r-sm) var(--r-sm) 0; }
 .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
 .pick-chip { padding: 7px 13px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface); color: var(--text-soft); font-size: 13px; font-weight: 550; cursor: pointer; transition: background .13s, border-color .13s, color .13s, transform .1s; }
 .pick-chip:hover { background: var(--surface-2); border-color: color-mix(in srgb, var(--acacia) 40%, var(--hairline)); color: var(--text); }

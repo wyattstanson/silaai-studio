@@ -19,12 +19,16 @@ export function Auth({ onBack }: { onBack: () => void }) {
   const [err, setErr] = useState("");
   const boxes = useRef<(HTMLInputElement | null)[]>([]);
 
-  const fullPhone = () => "+91 " + phone.replace(/\D/g, "").replace(/(\d{5})(\d{0,5})/, "$1 $2").trim();
+  // `phone` holds digits only (max 10); this keeps letters and symbols
+  // out of the field entirely, so nothing but a real mobile number passes.
+  const digits = phone.replace(/\D/g, "").slice(0, 10);
+  const fmtLocal = (d: string) => (d.length > 5 ? `${d.slice(0, 5)} ${d.slice(5)}` : d);
+  const fullPhone = () => `+91 ${fmtLocal(digits)}`.trim();
   const reset = (r: Role) => { setRole(r); setStep("phone"); setErr(""); setOtp(["", "", "", ""]); setHousehold([]); };
 
   const sendCode = () => {
     setErr("");
-    if (phone.replace(/\D/g, "").length < 10) { setErr("Enter a 10-digit mobile number."); return; }
+    if (digits.length !== 10) { setErr("Enter a valid 10-digit mobile number."); return; }
     setStep("otp");
     setTimeout(() => boxes.current[0]?.focus(), 60);
   };
@@ -83,16 +87,17 @@ export function Auth({ onBack }: { onBack: () => void }) {
               <Field label="Mobile number">
                 <div className="phone-field">
                   <span className="cc">+91</span>
-                  <input inputMode="numeric" value={phone} placeholder="98765 43210"
-                    onChange={e => setPhone(e.target.value)} onKeyDown={e => e.key === "Enter" && sendCode()} autoFocus />
+                  <input inputMode="numeric" maxLength={11} value={fmtLocal(digits)} placeholder="98765 43210"
+                    onChange={e => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    onKeyDown={e => e.key === "Enter" && sendCode()} autoFocus />
                 </div>
               </Field>
-              <Button variant="primary" onClick={sendCode}>Send code →</Button>
+              <Button variant="primary" disabled={digits.length !== 10} onClick={sendCode}>Send code →</Button>
               <div className="auth-hint">
                 Demo — tap to fill:<br />
                 {role === "staff"
-                  ? <code onClick={() => setPhone("90000 00000")}>Owner · 90000 00000</code>
-                  : <code onClick={() => setPhone("98110 20304")}>Sharma household · 98110 20304</code>}
+                  ? <code onClick={() => setPhone("9000000000")}>Owner · 90000 00000</code>
+                  : <code onClick={() => setPhone("9811020304")}>Sharma household · 98110 20304</code>}
               </div>
             </>
           )}

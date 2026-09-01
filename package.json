@@ -19,17 +19,17 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@fontsource/fraunces": "^5.1.0",
+    "@fontsource/inter": "^5.1.0",
+    "@prisma/client": "^5.22.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "@fontsource/inter": "^5.1.0",
-    "@fontsource/fraunces": "^5.1.0",
-    "@prisma/client": "^5.22.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/node": "^22.9.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@types/node": "^22.9.0",
     "@vercel/node": "^3.2.0",
     "@vitejs/plugin-react": "^4.3.4",
     "prisma": "^5.22.0",
