@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useStore } from "../data/store";
-import { Avatar, Badge, Card, Empty, Stat } from "../components/ui/ui";
+import { Avatar, Badge, Button, Card, Empty, Field, Input, Stat } from "../components/ui/ui";
 import { Icon, type IconName } from "../components/Icon";
 import { OrderDetail, dueBadge } from "./OrderSheet";
 import { STAGE_META, isClosed } from "../lib/stages";
@@ -14,15 +14,17 @@ const ACT_ICON: Record<ActivityType, IconName> = {
 };
 
 export function Portal({ active, go }: { active: string; go: (id: string) => void }) {
-  const { db, user } = useStore();
+  const { db, activeCustomer, addMeasurement } = useStore();
   const [open, setOpen] = useState<Order | null>(null);
+  const [addMeas, setAddMeas] = useState(false);
 
-  const famId = user?.familyId;
-  const family = db.families.find(f => f.id === famId);
-  const members = useMemo(() => db.customers.filter(c => c.familyId === famId), [db.customers, famId]);
-  const memberIds = new Set(members.map(m => m.id));
-  const orders = useMemo(() => db.orders.filter(o => memberIds.has(o.customerId)), [db.orders, famId]);
-  const activity = useMemo(() => db.activity.filter(a => a.familyId === famId), [db.activity, famId]);
+  const cid = activeCustomer?.id;
+  const family = db.families.find(f => f.id === activeCustomer?.familyId);
+  // this customer's own records (household siblings each have their own login)
+  const members = useMemo(() => (activeCustomer ? [activeCustomer] : []), [activeCustomer]);
+  const siblings = useMemo(() => db.customers.filter(c => c.familyId === activeCustomer?.familyId && c.id !== cid), [db.customers, activeCustomer, cid]);
+  const orders = useMemo(() => db.orders.filter(o => o.customerId === cid), [db.orders, cid]);
+  const activity = useMemo(() => db.activity.filter(a => a.customerId === cid), [db.activity, cid]);
 
   const active_ = orders.filter(o => !isClosed(o.stage));
   const dueDue = orders.reduce((s, o) => s + balance(o), 0);
@@ -33,7 +35,7 @@ export function Portal({ active, go }: { active: string; go: (id: string) => voi
 
   if (active === "myorders") {
     return (<>
-      <Head eyebrow={family?.name} title="My Orders" sub="Every piece we're making for your family." />
+      <Head eyebrow={activeCustomer?.name} title="My Orders" sub="Every piece we're making for you." />
       <Card>
         {orders.length === 0 ? <Empty icon={<Icon name="orders" size={30} />} title="No orders yet" hint="Your orders will appear here once placed at the studio." /> : (
           <div className="list">
@@ -58,36 +60,47 @@ export function Portal({ active, go }: { active: string; go: (id: string) => voi
   }
 
   if (active === "measurements") {
+    const me = members[0];
     return (<>
-      <Head eyebrow={family?.name} title="Measurements" sub="On file for each family member, kept fresh for a perfect fit." />
-      <div className="grid-cards">
-        {members.map(c => (
-          <Card key={c.id}>
-            <div className="fam-hd">
-              <Avatar name={c.name} />
-              <div className="who"><b>{c.name}</b><span> · {c.id}</span></div>
+      <Head eyebrow={activeCustomer?.name} title="Measurements" sub="Your sizes on file, kept fresh for a perfect fit. Add your own or let the studio take them." />
+      {me && (
+        <Card>
+          <div className="row" style={{ justifyContent: "space-between", padding: "14px 16px", borderBottom: addMeas ? "1px solid var(--hairline-soft)" : undefined }}>
+            <div className="fam-hd" style={{ padding: 0 }}>
+              <Avatar name={me.name} />
+              <div className="who"><b>{me.name}</b><span> · {me.id}</span></div>
             </div>
-            {c.measurements.length === 0 ? <div style={{ padding: 16, fontSize: 13, color: "var(--text-faint)" }}>No measurements yet. Visit the studio for a fitting.</div> :
-              c.measurements.map(m => (
-                <div key={m.id} style={{ padding: 14 }}>
-                  <div className="row" style={{ justifyContent: "space-between" }}>
-                    <b style={{ fontSize: 14 }}>{m.garment} <span className="chip">v{m.version ?? 1}</span></b>
-                    {measurementStale(m.takenAt) ? <Badge tone="warn">refresh · {fmtDate(m.takenAt)}</Badge> : <Badge tone="ok">{fmtDate(m.takenAt)}</Badge>}
-                  </div>
-                  <div className="meas-grid">
-                    {m.values.map((v, i) => <div className="meas-cell" key={i}><div className="m-lbl">{v.label}</div><div className="m-val">{v.value}</div></div>)}
-                  </div>
-                </div>
-              ))}
-          </Card>
-        ))}
-      </div>
+            <Button size="sm" variant={addMeas ? undefined : "primary"} onClick={() => setAddMeas(v => !v)}>
+              <Icon name={addMeas ? "close" : "plus"} size={13} /> {addMeas ? "Cancel" : "Add my measurement"}
+            </Button>
+          </div>
+          {addMeas && <CustomerAddMeas onSave={m => { addMeasurement(me.id, m); setAddMeas(false); }} />}
+          {me.measurements.length === 0 && !addMeas &&
+            <div style={{ padding: 16, fontSize: 13, color: "var(--text-faint)" }}>No measurements yet. Add your own above, or visit the studio for a fitting.</div>}
+          {me.measurements.map(m => (
+            <div key={m.id} style={{ padding: 14, borderTop: "1px solid var(--hairline-soft)" }}>
+              <div className="row" style={{ justifyContent: "space-between" }}>
+                <b style={{ fontSize: 14 }}>{m.garment} <span className="chip">v{m.version ?? 1}</span></b>
+                {measurementStale(m.takenAt) ? <Badge tone="warn">refresh · {fmtDate(m.takenAt)}</Badge> : <Badge tone="ok">{fmtDate(m.takenAt)}</Badge>}
+              </div>
+              <div className="meas-grid">
+                {m.values.map((v, i) => <div className="meas-cell" key={i}><div className="m-lbl">{v.label}</div><div className="m-val">{v.value}</div></div>)}
+              </div>
+            </div>
+          ))}
+        </Card>
+      )}
+      {siblings.length > 0 && (
+        <p className="faint" style={{ fontSize: 12.5, marginTop: 14, textAlign: "center" }}>
+          Family on this number: {siblings.map(s => s.name).join(", ")} — each has their own sign-in and Customer ID.
+        </p>
+      )}
     </>);
   }
 
   if (active === "history") {
     return (<>
-      <Head eyebrow={family?.name} title="Activity History" sub="Everything on your account: orders, fittings and payments, in order." />
+      <Head eyebrow={activeCustomer?.name} title="Activity History" sub="Everything on your account: orders, fittings and payments, in order." />
       <Card>
         {activity.length === 0 ? <Empty icon={<Icon name="history" size={30} />} title="Nothing yet" /> : (
           <div className="list">
@@ -111,7 +124,7 @@ export function Portal({ active, go }: { active: string; go: (id: string) => voi
 
   // Overview
   return (<>
-    <Head eyebrow={`Hello, ${user?.name?.split(" ")[0] ?? "there"}`} title="Your Portal" sub={`${family?.name} · signed in with ${user?.phone}`} />
+    <Head eyebrow={`Hello, ${activeCustomer?.name?.split(" ")[0] ?? "there"}`} title="Your Portal" sub={`${activeCustomer?.id ?? ""}${activeCustomer?.phone ? ` · signed in with ${activeCustomer.phone}` : family?.phone ? ` · ${family.phone}` : ""}`} />
     <div className="grid-stats">
       <Card><Stat icon={<Icon name="orders" size={15} />} label="Active orders" value={active_.length} sub={`${orders.length} in total`} /></Card>
       <Card><Stat icon={<Icon name="clock" size={15} />} label="Next delivery" value={nextDelivery ? fmtDay(nextDelivery.deliveryDate) : "—"} sub={nextDelivery?.garment ?? "nothing scheduled"} /></Card>
@@ -150,6 +163,68 @@ export function Portal({ active, go }: { active: string; go: (id: string) => voi
     </div>
     {detail}
   </>);
+}
+
+/* Customer self-service: pick the cloth, then fill in the measurements. */
+const GARMENTS: { name: string; fields: string[] }[] = [
+  { name: "Blouse", fields: ["Chest", "Waist", "Shoulder", "Sleeve"] },
+  { name: "Saree Blouse", fields: ["Chest", "Waist", "Shoulder", "Sleeve"] },
+  { name: "Kurta", fields: ["Chest", "Waist", "Length", "Shoulder", "Sleeve"] },
+  { name: "Anarkali", fields: ["Chest", "Waist", "Length", "Sleeve"] },
+  { name: "Lehenga", fields: ["Waist", "Hip", "Length"] },
+  { name: "Salwar Suit", fields: ["Chest", "Waist", "Hip", "Length"] },
+  { name: "Sherwani", fields: ["Chest", "Waist", "Length", "Shoulder", "Sleeve"] },
+  { name: "Shirt", fields: ["Chest", "Waist", "Length", "Shoulder", "Sleeve", "Collar"] },
+  { name: "Trousers", fields: ["Waist", "Hip", "Length", "Thigh"] },
+];
+
+type MeasIn = { takenAt: string; garment: string; values: { label: string; value: string }[] };
+
+function CustomerAddMeas({ onSave }: { onSave: (m: MeasIn) => void }) {
+  const [garment, setGarment] = useState("");
+  const [custom, setCustom] = useState("");
+  const [rows, setRows] = useState<{ label: string; value: string }[]>([]);
+
+  const pick = (g: typeof GARMENTS[number]) => {
+    setGarment(g.name); setCustom("");
+    setRows(g.fields.map(label => ({ label, value: "" })));
+  };
+  const pickOther = () => {
+    setGarment("__other"); setCustom("");
+    setRows(["Chest", "Waist", "Length"].map(label => ({ label, value: "" })));
+  };
+  const set = (i: number, v: string) => setRows(rs => rs.map((r, j) => j === i ? { ...r, value: v } : r));
+  const finalName = garment === "__other" ? custom.trim() : garment;
+  const ready = finalName.length > 0 && rows.some(r => r.value.trim());
+
+  return (
+    <div style={{ padding: 16 }}>
+      <div className="eyebrow" style={{ marginBottom: 8 }}>1 · Choose the cloth</div>
+      <div className="chip-row">
+        {GARMENTS.map(g => (
+          <button key={g.name} className={"pick-chip" + (garment === g.name ? " on" : "")} onClick={() => pick(g)}>{g.name}</button>
+        ))}
+        <button className={"pick-chip" + (garment === "__other" ? " on" : "")} onClick={pickOther}>Something else</button>
+      </div>
+
+      {garment === "__other" && (
+        <Field label="Garment name"><Input value={custom} placeholder="e.g. Nehru Jacket" autoFocus onChange={e => setCustom(e.target.value)} /></Field>
+      )}
+
+      {rows.length > 0 && (<>
+        <div className="eyebrow" style={{ margin: "14px 0 8px" }}>2 · Your measurements</div>
+        <div className="meas-grid">
+          {rows.map((r, i) => (
+            <div key={i}><div className="m-lbl" style={{ marginBottom: 3 }}>{r.label}</div><Input value={r.value} placeholder={'36"'} onChange={e => set(i, e.target.value)} /></div>
+          ))}
+        </div>
+        <Button variant="primary" size="sm" style={{ marginTop: 12 }} disabled={!ready}
+          onClick={() => onSave({ takenAt: new Date().toISOString(), garment: finalName, values: rows.filter(r => r.value.trim()) })}>
+          Save measurement
+        </Button>
+      </>)}
+    </div>
+  );
 }
 
 function Head({ eyebrow, title, sub }: { eyebrow?: string; title: string; sub: string }) {

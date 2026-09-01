@@ -1,29 +1,30 @@
 import { useRef, useState } from "react";
 import { useStore } from "../data/store";
-import { Button, Field, Input, Segmented } from "../components/ui/ui";
+import { Avatar, Button, Field, Input, Segmented } from "../components/ui/ui";
 import { Icon } from "../components/Icon";
+import type { Customer } from "../data/types";
 import "./auth.css";
 
-type Mode = "signin" | "signup";
-type Step = "phone" | "otp";
+type Role = "customer" | "staff";
+type Step = "phone" | "otp" | "household" | "signup";
 
 export function Auth({ onBack }: { onBack: () => void }) {
-  const { login, signup, theme, toggleTheme } = useStore();
-  const [mode, setMode] = useState<Mode>("signin");
+  const { staffLogin, customersForPhone, customerLogin, customerSignup, theme, toggleTheme } = useStore();
+  const [role, setRole] = useState<Role>("customer");
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [otp, setOtp] = useState(["", "", "", ""]);
+  const [household, setHousehold] = useState<Customer[]>([]);
   const [err, setErr] = useState("");
   const boxes = useRef<(HTMLInputElement | null)[]>([]);
 
   const fullPhone = () => "+91 " + phone.replace(/\D/g, "").replace(/(\d{5})(\d{0,5})/, "$1 $2").trim();
+  const reset = (r: Role) => { setRole(r); setStep("phone"); setErr(""); setOtp(["", "", "", ""]); setHousehold([]); };
 
   const sendCode = () => {
     setErr("");
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length < 10) { setErr("Enter a 10-digit mobile number."); return; }
-    if (mode === "signup" && !name.trim()) { setErr("Please tell us your name."); return; }
+    if (phone.replace(/\D/g, "").length < 10) { setErr("Enter a 10-digit mobile number."); return; }
     setStep("otp");
     setTimeout(() => boxes.current[0]?.focus(), 60);
   };
@@ -31,12 +32,13 @@ export function Auth({ onBack }: { onBack: () => void }) {
   const verify = () => {
     setErr("");
     if (otp.join("").length < 4) { setErr("Enter the 4-digit code."); return; }
-    if (mode === "signin") {
-      const u = login(fullPhone());
-      if (!u) { setErr("No account with this number. Switch to Sign up to create one."); setStep("phone"); }
-    } else {
-      signup(name.trim(), fullPhone());
+    if (role === "staff") {
+      if (!staffLogin(fullPhone())) setErr("No staff console for this number. Ask the owner, or use a customer sign-in.");
+      return;
     }
+    const list = customersForPhone(fullPhone());
+    if (list.length) { setHousehold(list); setStep("household"); }
+    else setStep("signup");
   };
 
   const setDigit = (i: number, v: string) => {
@@ -44,6 +46,11 @@ export function Auth({ onBack }: { onBack: () => void }) {
     setOtp(o => o.map((x, j) => (j === i ? d : x)));
     if (d && i < 3) boxes.current[i + 1]?.focus();
   };
+
+  const heading = step === "household" ? "Who's this?"
+    : step === "signup" ? "Create your profile"
+    : step === "otp" ? "Verify your number"
+    : role === "staff" ? "Staff console" : "Welcome";
 
   return (
     <div className="auth">
@@ -53,16 +60,17 @@ export function Auth({ onBack }: { onBack: () => void }) {
       <div className="auth-card">
         <div className="auth-top">
           <div className="mark">S</div>
-          <h2>{step === "otp" ? "Verify your number" : mode === "signin" ? "Welcome back" : "Create your account"}</h2>
+          <h2>{heading}</h2>
           <p>
-            {step === "otp"
-              ? <>We sent a code to <b>{fullPhone()}</b></>
-              : "One portal for your whole family. Track orders, fittings and payments."}
+            {step === "otp" ? <>We sent a code to <b>{fullPhone()}</b></>
+              : step === "household" ? "More than one profile uses this number. Pick yours."
+              : step === "signup" ? "A separate profile is created for you, even on a shared number."
+              : role === "staff" ? "For shop staff and the owner." : "Track your orders, fittings and measurements."}
           </p>
           {step === "phone" && (
             <div className="auth-seg">
-              <Segmented<Mode> value={mode} onChange={m => { setMode(m); setErr(""); }}
-                options={[{ value: "signin", label: "Sign in" }, { value: "signup", label: "Sign up" }]} />
+              <Segmented<Role> value={role} onChange={reset}
+                options={[{ value: "customer", label: "Customer" }, { value: "staff", label: "Staff console" }]} />
             </div>
           )}
         </div>
@@ -70,26 +78,26 @@ export function Auth({ onBack }: { onBack: () => void }) {
         <div className="auth-body">
           {err && <div className="auth-err">{err}</div>}
 
-          {step === "phone" ? (
+          {step === "phone" && (
             <>
-              {mode === "signup" && (
-                <Field label="Your name"><Input value={name} placeholder="e.g. Anjali Sharma" onChange={e => setName(e.target.value)} /></Field>
-              )}
               <Field label="Mobile number">
                 <div className="phone-field">
                   <span className="cc">+91</span>
                   <input inputMode="numeric" value={phone} placeholder="98765 43210"
-                    onChange={e => setPhone(e.target.value)} onKeyDown={e => e.key === "Enter" && sendCode()} />
+                    onChange={e => setPhone(e.target.value)} onKeyDown={e => e.key === "Enter" && sendCode()} autoFocus />
                 </div>
               </Field>
               <Button variant="primary" onClick={sendCode}>Send code →</Button>
               <div className="auth-hint">
-                Demo accounts, tap to fill:<br />
-                <code onClick={() => { setMode("signin"); setPhone("90000 00000"); }}>Owner · 90000 00000</code>{" "}
-                <code onClick={() => { setMode("signin"); setPhone("98110 20304"); }}>Family · 98110 20304</code>
+                Demo — tap to fill:<br />
+                {role === "staff"
+                  ? <code onClick={() => setPhone("90000 00000")}>Owner · 90000 00000</code>
+                  : <code onClick={() => setPhone("98110 20304")}>Sharma household · 98110 20304</code>}
               </div>
             </>
-          ) : (
+          )}
+
+          {step === "otp" && (
             <>
               <div className="otp">
                 {otp.map((d, i) => (
@@ -98,9 +106,35 @@ export function Auth({ onBack }: { onBack: () => void }) {
                     onKeyDown={e => { if (e.key === "Backspace" && !otp[i] && i > 0) boxes.current[i - 1]?.focus(); if (e.key === "Enter") verify(); }} />
                 ))}
               </div>
-              <div className="auth-hint">This is a demo. <code onClick={() => setOtp(["0", "0", "0", "0"])}>Any 4 digits</code> will verify.</div>
-              <Button variant="primary" onClick={verify}>{mode === "signin" ? "Sign in" : "Create account"}</Button>
+              <div className="auth-hint">Demo — <code onClick={() => setOtp(["0", "0", "0", "0"])}>any 4 digits</code> verify.</div>
+              <Button variant="primary" onClick={verify}>{role === "staff" ? "Open console" : "Continue"}</Button>
               <button className="btn btn-ghost" onClick={() => { setStep("phone"); setOtp(["", "", "", ""]); }}><Icon name="back" size={14} /> Change number</button>
+            </>
+          )}
+
+          {step === "household" && (
+            <>
+              <div className="household">
+                {household.map(c => (
+                  <button className="hh-row" key={c.id} onClick={() => customerLogin(c.id)}>
+                    <Avatar name={c.name} />
+                    <div className="grow"><div className="hh-name">{c.name}</div><div className="hh-id">{c.id}</div></div>
+                    <Icon name="chevron" size={16} />
+                  </button>
+                ))}
+              </div>
+              <button className="btn btn-ghost" onClick={() => { setName(""); setStep("signup"); }}>
+                <Icon name="plus" size={14} /> Someone else — add a member
+              </button>
+            </>
+          )}
+
+          {step === "signup" && (
+            <>
+              <Field label="Your name"><Input value={name} placeholder="e.g. Anjali Sharma" autoFocus onChange={e => setName(e.target.value)} onKeyDown={e => e.key === "Enter" && name.trim() && customerSignup(name.trim(), fullPhone())} /></Field>
+              <p className="auth-hint" style={{ textAlign: "left" }}>Number: <b>{fullPhone()}</b> — you'll get your own Customer ID.</p>
+              <Button variant="primary" disabled={!name.trim()} onClick={() => customerSignup(name.trim(), fullPhone())}>Create profile</Button>
+              {household.length > 0 && <button className="btn btn-ghost" onClick={() => setStep("household")}><Icon name="back" size={14} /> Back to household</button>}
             </>
           )}
         </div>

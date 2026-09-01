@@ -35,5 +35,13 @@
 .auth-err { background: var(--urgent-bg); color: var(--clay); font-size: 13px; padding: 9px 12px; border-radius: 9px; }
 .auth-hint { font-size: 12px; color: var(--text-faint); text-align: center; line-height: 1.6; }
 .auth-hint code { background: var(--surface-2); padding: 1px 6px; border-radius: 5px; border: 1px solid var(--hairline); cursor: pointer; }
+.household { display: flex; flex-direction: column; gap: 8px; }
+.hh-row { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; cursor: pointer; padding: 9px 12px; border-radius: var(--r-sm); border: 1px solid var(--hairline); background: var(--surface); color: var(--text); transition: background .13s, border-color .13s, transform .1s; }
+.hh-row:hover { background: var(--surface-2); border-color: color-mix(in srgb, var(--acacia) 40%, var(--hairline)); }
+.hh-row:active { transform: translateY(0.5px); }
+.hh-row .grow { flex: 1; min-width: 0; }
+.hh-name { font-weight: 600; font-size: 14px; }
+.hh-id { font-size: 12px; color: var(--text-faint); font-family: var(--font-mono, monospace); }
+
 .auth-foot { text-align: center; padding: 0 26px 22px; }
 .auth-foot button { background: none; border: none; color: var(--text-soft); font-size: 13px; cursor: pointer; text-decoration: underline; }

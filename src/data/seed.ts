@@ -58,7 +58,7 @@ export function seed(): DB {
         }],
       },
       {
-        id: "CUS-0002", familyId: "FAM-01", name: "Ravi Sharma", gender: "M", createdAt: day(-300),
+        id: "CUS-0002", familyId: "FAM-01", name: "Ravi Sharma", gender: "M", phone: "+91 98110 20304", createdAt: day(-300),
         measurements: [{
           version: 1, id: "M2", takenAt: day(-95), garment: "Sherwani",
           values: [{ label: "Chest", value: "42\"" }, { label: "Length", value: "44\"" }, { label: "Shoulder", value: "18\"" }],

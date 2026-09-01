@@ -82,44 +82,45 @@
 }
 
 /* ============================================================
-   Dark (dye-vat night: deep indigo, bright text, marigold pops)
+   Dark (festive night: warm near-black, gold + crimson, no blue)
    ============================================================ */
 :root[data-theme="dark"] {
-  --app-bg:        #14152b;
-  --window-bg:     #1c1d3a;
-  --surface:       #23244a;
-  --surface-2:     #191a34;
-  --sidebar-bg:    rgba(25, 26, 52, 0.80);
-  --titlebar-bg:   rgba(28, 29, 58, 0.86);
+  --app-bg:        #0d0a08;
+  --window-bg:     #16120d;
+  --surface:       #1f1811;
+  --surface-2:     #130f0a;
+  --sidebar-bg:    rgba(20, 15, 10, 0.84);
+  --titlebar-bg:   rgba(23, 18, 12, 0.88);
 
-  --text:          #edecf6;
-  --text-soft:     #b7b8d4;
-  --text-faint:    #8688a8;
-  --hairline:      #33345c;
-  --hairline-soft: #26274a;
+  --text:          #f7edd7;
+  --text-soft:     #cdba96;
+  --text-faint:    #96836a;
+  --hairline:      #342a1f;
+  --hairline-soft: #241d15;
 
-  --acacia:      #d8ab4c;  --acacia-deep: #ac823a;  --acacia-soft: #3b3117;
-  --maroon:      #8286cc;  --maroon-deep: #6165ab;  --maroon-soft: #262a51;
-  --sage:        #7fb06f;  --sage-deep:   #63924f;  --sage-soft:   #253620;
-  --clay:        #d47a7a;  --clay-soft:   #3a2222;
-  --peacock:     #5fa9b2;  --peacock-soft:#173032;
-  --plum:        #a892cc;
+  /* festive jewel tones on black */
+  --acacia:      #e1b552;  --acacia-deep: #b1852f;  --acacia-soft: #3c2e12;  /* marigold gold */
+  --maroon:      #d15c68;  --maroon-deep: #ac4451;  --maroon-soft: #351a1d;  /* kumkum crimson */
+  --sage:        #9fac63;  --sage-deep:   #7d8a49;  --sage-soft:   #2a3019;  /* mehndi */
+  --clay:        #d96a6a;  --clay-soft:   #371a1a;  /* red */
+  --peacock:     #59a89e;  --peacock-soft:#14302c;  /* jewel teal (info) */
+  --plum:        #c98bb0;  /* rani */
 
-  --ok:      #7fb06f;
-  --warn:    #d8ab4c;
-  --urgent:  #d47a7a;
-  --info:    #8286cc;
+  --ok:      #9fac63;
+  --warn:    #e1b552;
+  --urgent:  #d96a6a;
+  --info:    #59a89e;
 
-  --ok-bg:   #253620;
-  --warn-bg: #3b3117;
-  --urgent-bg:#3a2222;
-  --info-bg: #262a51;
+  --ok-bg:   #2a3019;
+  --warn-bg: #3c2e12;
+  --urgent-bg:#371a1a;
+  --info-bg: #14302c;
 
-  --sh-window: 0 24px 60px -14px rgba(0, 0, 0, 0.68), 0 6px 18px -8px rgba(0, 0, 0, 0.52);
-  --sh-1: 0 1px 2px rgba(0,0,0,0.45);
-  --sh-2: 0 2px 8px -3px rgba(0,0,0,0.5);
-  --sh-3: 0 14px 30px -12px rgba(0,0,0,0.62);
-  --ring: 0 0 0 2px rgba(216, 171, 76, 0.34);
+  --sh-window: 0 24px 60px -14px rgba(0, 0, 0, 0.74), 0 6px 18px -8px rgba(0, 0, 0, 0.6);
+  --sh-1: 0 1px 2px rgba(0,0,0,0.5);
+  --sh-2: 0 2px 8px -3px rgba(0,0,0,0.55);
+  --sh-3: 0 14px 30px -12px rgba(0,0,0,0.68);
+  --ring: 0 0 0 2px rgba(225, 181, 82, 0.36);
 }
 
 /* ------------------------------------------------------------

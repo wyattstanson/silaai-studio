@@ -15,15 +15,15 @@ export function Requests() {
 
 /* ============================ MEMBER ============================ */
 function MemberRequests() {
-  const { db, user, addRequest } = useStore();
+  const { db, activeCustomer, addRequest } = useStore();
   const [compose, setCompose] = useState<RequestType | null>(null);
   const [open, setOpen] = useState<ServiceRequest | null>(null);
 
-  const family = db.families.find(f => f.id === user?.familyId);
-  const members = useMemo(() => db.customers.filter(c => c.familyId === user?.familyId), [db.customers, user]);
+  const cid = activeCustomer?.id;
+  const members = useMemo(() => (activeCustomer ? [activeCustomer] : []), [activeCustomer]);
   const mine = useMemo(
-    () => db.requests.filter(r => r.familyId === user?.familyId).sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)),
-    [db.requests, user]
+    () => db.requests.filter(r => r.customerId === cid).sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)),
+    [db.requests, cid]
   );
   const open_ = mine.filter(r => !["completed", "declined", "cancelled"].includes(r.status));
 
@@ -31,7 +31,7 @@ function MemberRequests() {
     <>
       <div className="page-head">
         <div>
-          <span className="eyebrow">{family?.name}</span>
+          <span className="eyebrow">{activeCustomer?.name}</span>
           <h1>Requests</h1>
           <p>Ask the studio for anything: stitching, pickups, fittings and more.</p>
         </div>
@@ -65,10 +65,10 @@ function MemberRequests() {
         )}
       </Card>
 
-      {compose && <RequestForm type={compose} members={members} orders={db.orders.filter(o => members.some(m => m.id === o.customerId))}
-        defaultCustomer={members.find(m => m.name === user?.name)?.id ?? members[0]?.id}
+      {compose && <RequestForm type={compose} members={members} orders={db.orders.filter(o => o.customerId === cid)}
+        defaultCustomer={cid}
         onClose={() => setCompose(null)}
-        onSubmit={data => { const req = addRequest({ ...data, familyId: user?.familyId }); setCompose(null); setOpen(req); }} />}
+        onSubmit={data => { const req = addRequest({ ...data, familyId: activeCustomer?.familyId }); setCompose(null); setOpen(req); }} />}
       {open && <RequestDetail request={db.requests.find(r => r.id === open.id)!} onClose={() => setOpen(null)} custName={id => db.customers.find(c => c.id === id)?.name} />}
     </>
   );

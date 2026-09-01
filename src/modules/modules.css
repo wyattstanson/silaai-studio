@@ -61,6 +61,11 @@
 .meas-cell { background: var(--surface); border: 1px solid var(--hairline); border-radius: 8px; padding: 7px 9px; }
 .meas-cell .m-lbl { font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; }
 .meas-cell .m-val { font-size: 15px; font-weight: 600; font-family: var(--font-display); }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+.pick-chip { padding: 7px 13px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface); color: var(--text-soft); font-size: 13px; font-weight: 550; cursor: pointer; transition: background .13s, border-color .13s, color .13s, transform .1s; }
+.pick-chip:hover { background: var(--surface-2); border-color: color-mix(in srgb, var(--acacia) 40%, var(--hairline)); color: var(--text); }
+.pick-chip:active { transform: translateY(0.5px); }
+.pick-chip.on { background: color-mix(in srgb, var(--acacia) 16%, var(--surface)); border-color: var(--acacia); color: var(--text); }
 
 /* ---- Reports ------------------------------------------------ */
 .bar-row { display: grid; grid-template-columns: 120px 1fr 54px; align-items: center; gap: 12px; padding: 7px 0; font-size: 13px; }

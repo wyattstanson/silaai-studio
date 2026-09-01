@@ -75,12 +75,12 @@ function Studio({ onShowcase }: { onShowcase: () => void }) {
 
 /* ---- Member: family portal ---------------------------------- */
 function MemberPortal({ onShowcase }: { onShowcase: () => void }) {
-  const { db, user, logout } = useStore();
+  const { db, activeCustomer, logout } = useStore();
   const [active, setActive] = useState("portal");
-  const memberIds = new Set(db.customers.filter(c => c.familyId === user?.familyId).map(c => c.id));
-  const activeOrders = db.orders.filter(o => memberIds.has(o.customerId) && !isClosed(o.stage)).length;
+  const cid = activeCustomer?.id;
+  const activeOrders = db.orders.filter(o => o.customerId === cid && !isClosed(o.stage)).length;
 
-  const openReq = db.requests.filter(r => r.familyId === user?.familyId && ["submitted", "acknowledged", "scheduled", "in_progress"].includes(r.status)).length;
+  const openReq = db.requests.filter(r => r.customerId === cid && ["submitted", "acknowledged", "scheduled", "in_progress"].includes(r.status)).length;
   const nav: NavItem[] = [
     { id: "portal", label: "Overview", icon: "overview", group: "My Studio", tone: "neutral" },
     { id: "myorders", label: "My Orders", icon: "orders", group: "My Studio", count: activeOrders, tone: "accent" },

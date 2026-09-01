@@ -37,14 +37,18 @@ export type Mode = "connecting" | "online" | "offline";
 
 interface Store {
   db: DB;
-  user: User | null;
+  user: User | null;              // unified principal (staff or the signed-in customer)
+  activeCustomer: Customer | null; // set when a customer is signed in
   theme: "light" | "dark";
   mode: Mode;
   toggleTheme: () => void;
   resetData: () => void;
 
-  login: (phone: string) => User | null;
-  signup: (name: string, phone: string) => User;
+  // auth — staff console login vs customer household lookup
+  staffLogin: (phone: string) => User | null;
+  customersForPhone: (phone: string) => Customer[];
+  customerLogin: (customerId: string) => void;
+  customerSignup: (name: string, phone: string) => Customer;
   logout: () => void;
 
   addFamily: (f: Omit<Family, "id" | "createdAt">) => Family;
@@ -69,9 +73,19 @@ interface Store {
 
 const Ctx = createContext<Store | null>(null);
 
+type Session = { kind: "staff"; phone: string } | { kind: "customer"; customerId: string };
+function loadSession(): Session | null {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    if (raw.startsWith("{")) return JSON.parse(raw) as Session;
+    return { kind: "staff", phone: raw }; // migrate old plain-phone sessions
+  } catch { return null; }
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [db, setDb] = useState<DB>(load);
-  const [phone, setPhone] = useState<string | null>(() => localStorage.getItem(SESSION_KEY));
+  const [session, setSession] = useState<Session | null>(loadSession);
   const [theme, setTheme] = useState<"light" | "dark">(
     () => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
   );
@@ -106,11 +120,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
   useEffect(() => {
-    if (phone) localStorage.setItem(SESSION_KEY, phone);
+    if (session) localStorage.setItem(SESSION_KEY, JSON.stringify(session));
     else localStorage.removeItem(SESSION_KEY);
-  }, [phone]);
+  }, [session]);
 
-  const user = useMemo(() => db.users.find(u => normPhone(u.phone) === normPhone(phone ?? "")) ?? null, [db.users, phone]);
+  const staff = useMemo(
+    () => session?.kind === "staff" ? (db.users.find(u => normPhone(u.phone) === normPhone(session.phone) && u.role === "owner") ?? null) : null,
+    [db.users, session]
+  );
+  const activeCustomer = useMemo(
+    () => session?.kind === "customer" ? (db.customers.find(c => c.id === session.customerId) ?? null) : null,
+    [db.customers, session]
+  );
+  const user = useMemo<User | null>(() => {
+    if (staff) return staff;
+    if (activeCustomer) return { id: activeCustomer.id, phone: activeCustomer.phone ?? "", name: activeCustomer.name, role: "member", familyId: activeCustomer.familyId, createdAt: activeCustomer.createdAt };
+    return null;
+  }, [staff, activeCustomer]);
 
   const store = useMemo<Store>(() => {
     const online = mode === "online";
@@ -120,39 +146,58 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const actor = () => user?.name ?? "Studio";
 
     return {
-      db, user, theme, mode,
+      db, user, activeCustomer, theme, mode,
       toggleTheme: () => setTheme(t => (t === "light" ? "dark" : "light")),
-      resetData: () => { setDb(seed()); setPhone(null); },
+      resetData: () => { setDb(seed()); setSession(null); },
 
-      login: (p) => {
-        const found = db.users.find(u => normPhone(u.phone) === normPhone(p));
+      // ---- Staff / owner console login ----
+      staffLogin: (p) => {
+        const found = db.users.find(u => normPhone(u.phone) === normPhone(p) && u.role === "owner");
         if (!found) return null;
-        setPhone(found.phone);
+        setSession({ kind: "staff", phone: found.phone });
         setDb(d => ({ ...d, users: d.users.map(u => u.id === found.id ? { ...u, lastLogin: new Date().toISOString() } : u) }));
-        log({ type: "login", summary: `${found.name} signed in`, familyId: found.familyId, actor: found.name });
+        log({ type: "login", summary: `${found.name} opened the console`, actor: found.name });
         return found;
       },
-      signup: (name, p) => {
-        const existing = db.users.find(u => normPhone(u.phone) === normPhone(p));
-        if (existing) { setPhone(existing.phone); return existing; }
-        const fam: Family = { id: uid("FAM"), name: `${name.split(" ")[0]}'s Household`, phone: p, createdAt: new Date().toISOString() };
+
+      // ---- Customer household lookup + login ----
+      // A phone can belong to several family members, each a separate Customer ID.
+      customersForPhone: (p) => {
+        const n = normPhone(p);
+        if (!n) return [];
+        return db.customers.filter(c =>
+          normPhone(c.phone ?? "") === n ||
+          normPhone(db.families.find(f => f.id === c.familyId)?.phone ?? "") === n);
+      },
+      customerLogin: (customerId) => {
+        const c = db.customers.find(x => x.id === customerId);
+        if (!c) return;
+        setSession({ kind: "customer", customerId });
+        log({ type: "login", summary: `${c.name} signed in`, familyId: c.familyId, customerId, actor: c.name });
+      },
+      customerSignup: (name, p) => {
+        // reuse the household's family if the phone is already known, else start one
+        const n = normPhone(p);
+        const sibling = db.customers.find(c => normPhone(c.phone ?? "") === n);
+        const existingFam = db.families.find(f => f.id === sibling?.familyId) ?? db.families.find(f => normPhone(f.phone) === n);
+        const fam: Family = existingFam ?? { id: uid("FAM"), name: `${name.split(" ")[0]}'s Household`, phone: p, createdAt: new Date().toISOString() };
         const cus: Customer = { id: `CUS-${pad(db.customers.length + 1)}`, familyId: fam.id, name, phone: p, createdAt: new Date().toISOString(), measurements: [] };
-        const usr: User = { id: uid("USR"), phone: p, name, role: "member", familyId: fam.id, createdAt: new Date().toISOString(), lastLogin: new Date().toISOString() };
         setDb(d => ({
           ...d,
-          families: [...d.families, fam],
+          families: existingFam ? d.families : [...d.families, fam],
           customers: [...d.customers, cus],
-          users: [...d.users, usr],
-          activity: [{ id: uid("A"), at: new Date().toISOString(), type: "signup" as ActivityType, summary: `${name} created an account`, familyId: fam.id, customerId: cus.id, actor: name }, ...d.activity],
+          activity: [{ id: uid("A"), at: new Date().toISOString(), type: "signup" as ActivityType, summary: `${name} created a profile`, familyId: fam.id, customerId: cus.id, actor: name }, ...d.activity],
         }));
-        setPhone(p);
-        if (online) backend.signup(name, p).then((res: any) => {
-          if (res?.customer?.id) R.customer[cus.id] = res.customer.id;
-          if (res?.family?.id) setDb(d => ({ ...d, families: d.families.map(f => f.id === fam.id ? { ...f, id: res.family.id } : f) }));
-        }).catch(warn);
-        return usr;
+        setSession({ kind: "customer", customerId: cus.id });
+        if (online) {
+          const mkCustomer = (familyId: string) => backend.customers.create({ familyId, name, phone: p, gender: cus.gender })
+            .then((srv: any) => { R.customer[cus.id] = srv.id; }).catch(warn);
+          if (existingFam) mkCustomer(fam.id);
+          else backend.families.create({ name: fam.name, phone: fam.phone }).then((srv: any) => mkCustomer(srv.id)).catch(warn);
+        }
+        return cus;
       },
-      logout: () => setPhone(null),
+      logout: () => setSession(null),
 
       addFamily: (f) => {
         const fam: Family = { ...f, id: uid("FAM"), createdAt: new Date().toISOString() };
@@ -277,7 +322,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       addModule: (m) => setDb(d => ({ ...d, modules: [...d.modules, { ...m, core: false }] })),
       removeModule: (id) => setDb(d => ({ ...d, modules: d.modules.filter(m => m.id !== id || m.core) })),
     };
-  }, [db, user, theme, mode]);
+  }, [db, user, activeCustomer, theme, mode]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }
