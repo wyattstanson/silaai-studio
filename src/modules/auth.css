@@ -77,6 +77,7 @@
   font-family: var(--font-display); font-size: 25px;
   box-shadow: var(--sh-2), inset 0 1px 0 rgba(255,255,255,0.22);
 }
+.auth-logo { display: block; margin: 0 auto 12px; color: var(--maroon); }
 .auth-top h2 { font-size: 23px; }
 .auth-top p { color: var(--text-soft); font-size: 13.5px; margin: 6px 0 0; }
 .auth-body { position: relative; padding: 18px 26px 24px; display: grid; gap: 14px; }

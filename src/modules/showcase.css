@@ -25,7 +25,7 @@
   border-bottom: 1px solid var(--hairline);
 }
 .sc-bar .logo { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 19px; font-weight: 600; color: var(--text); background: none; border: none; cursor: pointer; padding: 0; }
-.sc-bar .logo .mark { width: 30px; height: 30px; border-radius: 8px; background: var(--maroon); color: #fdf6e6; display: grid; place-items: center; font-size: 16px; box-shadow: var(--sh-1), inset 0 1px 0 rgba(255,255,255,0.18); }
+.sc-bar .logo .sc-logo-mark { color: var(--maroon); flex: none; }
 .sc-bar a { color: var(--text-soft); text-decoration: none; font-size: 13.5px; font-weight: 550; padding: 6px 10px; border-radius: 7px; transition: background .15s, color .15s; }
 .sc-bar a:hover { background: color-mix(in srgb, var(--acacia) 14%, transparent); color: var(--text); }
 .sc-bar .grow { flex: 1; }
@@ -57,6 +57,8 @@
 .hero h1 em { font-style: italic; color: var(--acacia-deep); }
 :root[data-theme="dark"] .hero h1 em { color: var(--acacia); }
 .hero p { font-size: 16px; color: var(--text-soft); line-height: 1.6; max-width: 42ch; }
+.hero .hero-tag { font-family: var(--font-display); font-style: italic; font-size: 17px; color: var(--acacia-deep); margin-top: 4px; }
+:root[data-theme="dark"] .hero .hero-tag { color: var(--acacia); }
 .hero .cta { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
 .hero-figure {
   position: relative; aspect-ratio: 4/3.4; border-radius: 22px; overflow: hidden;
@@ -125,6 +127,20 @@ a.bubble:hover { transform: translateY(-4px); box-shadow: var(--sh-3); }
 
 /* footer */
 .sc-foot { border-top: 1px solid var(--hairline); margin-top: 30px; padding: 26px 0 40px; display: flex; align-items: center; justify-content: space-between; color: var(--text-faint); font-size: 12.5px; flex-wrap: wrap; gap: 10px; }
+
+/* Legibility of headline copy sitting directly on the flowing field. */
+.hero h1, .hero p, .hero .eyebrow,
+.sc-head h2, .sc-head p, .sc-head .eyebrow {
+  text-shadow: 0 1px 20px rgba(0,0,0,0.40), 0 0 2px rgba(0,0,0,0.25);
+}
+:root:not([data-theme="dark"]) .hero h1,
+:root:not([data-theme="dark"]) .hero p,
+:root:not([data-theme="dark"]) .hero .eyebrow,
+:root:not([data-theme="dark"]) .sc-head h2,
+:root:not([data-theme="dark"]) .sc-head p,
+:root:not([data-theme="dark"]) .sc-head .eyebrow {
+  text-shadow: 0 1px 16px rgba(255,247,235,0.85), 0 0 3px rgba(255,247,235,0.7);
+}
 
 /* ---- scroll reveal --------------------------------------------
    Progressive enhancement: elements only hide once JS adds

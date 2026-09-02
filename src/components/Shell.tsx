@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useStore } from "../data/store";
+import { Logo } from "./Logo";
 import { Icon, type IconName } from "./Icon";
 import { Dock, type DockItem } from "./Dock";
 import { useDrag } from "../hooks/useDrag";
@@ -111,8 +112,8 @@ export function Shell({
 
         <aside className="sidebar" data-no-drag>
           <div className="brand">
-            <div className="mark">S</div>
-            <div className="who"><b>Silai</b><span>Tailoring Studio · {db.shop.batch}</span></div>
+            <Logo size={34} className="brand-mark" />
+            <div className="who"><b>Silaai</b><span>Tailoring Studio · {db.shop.batch}</span></div>
           </div>
 
           {groups.map(g => (

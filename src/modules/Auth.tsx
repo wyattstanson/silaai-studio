@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useStore } from "../data/store";
 import { Avatar, Button, Field, Input, Segmented } from "../components/ui/ui";
 import { Icon } from "../components/Icon";
+import { Logo } from "../components/Logo";
 import type { Customer } from "../data/types";
 import "./auth.css";
 
@@ -63,7 +64,7 @@ export function Auth({ onBack }: { onBack: () => void }) {
       </button>
       <div className="auth-card">
         <div className="auth-top">
-          <div className="mark">S</div>
+          <Logo size={52} className="auth-logo" />
           <h2>{heading}</h2>
           <p>
             {step === "otp" ? <>We sent a code to <b>{fullPhone()}</b></>

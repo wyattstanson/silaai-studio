@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { StoreProvider, useStore } from "./data/store";
 import { WindowProvider, type WinState } from "./components/windows/WindowManager";
 import { Shell, type NavItem } from "./components/Shell";
@@ -18,6 +18,8 @@ import { OrderDetail } from "./modules/OrderSheet";
 import { CustomerAdmin } from "./modules/CustomerAdmin";
 import { Empty } from "./components/ui/ui";
 import { isClosed } from "./lib/stages";
+import { CustomPointer } from "./components/CustomPointer";
+import { Splash } from "./components/Splash";
 
 /* Content for a floating window; subscribes to the store so windows stay live. */
 function WindowContent({ win, readOnly }: { win: WinState; readOnly: boolean }) {
@@ -107,15 +109,20 @@ function Root() {
 
   useEffect(() => { setViewShowcase(false); if (user) setRoute("showcase"); }, [user?.id]);
 
+  let view: ReactNode;
   if (!user) {
-    return route === "auth"
+    view = route === "auth"
       ? <Auth onBack={() => setRoute("showcase")} />
       : <Showcase onEnter={() => setRoute("auth")} />;
+  } else if (viewShowcase) {
+    view = <Showcase loggedIn onEnter={() => setViewShowcase(false)} onBack={() => setViewShowcase(false)} />;
+  } else {
+    view = user.role === "owner"
+      ? <Studio onShowcase={() => setViewShowcase(true)} />
+      : <MemberPortal onShowcase={() => setViewShowcase(true)} />;
   }
-  if (viewShowcase) return <Showcase loggedIn onEnter={() => setViewShowcase(false)} onBack={() => setViewShowcase(false)} />;
-  return user.role === "owner"
-    ? <Studio onShowcase={() => setViewShowcase(true)} />
-    : <MemberPortal onShowcase={() => setViewShowcase(true)} />;
+
+  return view;
 }
 
 export default function App() {
@@ -124,6 +131,8 @@ export default function App() {
       <WindowProvider>
         <Root />
       </WindowProvider>
+      <CustomPointer />
+      <Splash />
     </StoreProvider>
   );
 }

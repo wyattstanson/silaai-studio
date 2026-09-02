@@ -10,7 +10,7 @@ import {
   paymentCreate, measurementCreate, requestCreate, stageUp, type Refs,
 } from "./remote";
 
-const KEY = "silai.db.v3";
+const KEY = "silai.db.v4";
 const SESSION_KEY = "silai.session";
 const THEME_KEY = "silai.theme";
 
@@ -31,6 +31,17 @@ function load(): DB {
 const uid = (p: string) => `${p}-${Math.random().toString(36).slice(2, 7)}`;
 const pad = (n: number) => String(n).padStart(4, "0");
 const normPhone = (p: string) => p.replace(/\s+/g, "").replace(/[^\d+]/g, "");
+
+/* Customer IDs: first three letters of the family name + a 3-digit
+   sequence within that family, e.g. Sharma Household -> SHA001, SHA002. */
+export const CUSTOMER_ID_RE = /^[A-Z]{3}\d{3}$/;
+const custPrefix = (familyName: string) =>
+  (familyName || "").replace(/[^a-zA-Z]/g, "").slice(0, 3).toUpperCase().padEnd(3, "X");
+const makeCustomerId = (familyName: string, customers: Customer[]) => {
+  const pre = custPrefix(familyName);
+  const used = customers.filter(c => c.id.startsWith(pre)).map(c => parseInt(c.id.slice(3), 10)).filter(n => !Number.isNaN(n));
+  return pre + String((used.length ? Math.max(...used) : 0) + 1).padStart(3, "0");
+};
 const warn = (e: unknown) => console.warn("[silai] sync failed:", e);
 
 export type Mode = "connecting" | "online" | "offline";
@@ -52,7 +63,7 @@ interface Store {
   logout: () => void;
 
   addFamily: (f: Omit<Family, "id" | "createdAt">) => Family;
-  addCustomer: (c: Omit<Customer, "id" | "createdAt" | "measurements">) => Customer;
+  addCustomer: (c: Omit<Customer, "id" | "createdAt" | "measurements"> & { id?: string }) => Customer;
   updateCustomer: (id: string, patch: Partial<Customer>) => void;
   updateFamily: (id: string, patch: Partial<Family>) => void;
   deleteCustomer: (id: string) => void;
@@ -181,7 +192,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const sibling = db.customers.find(c => normPhone(c.phone ?? "") === n);
         const existingFam = db.families.find(f => f.id === sibling?.familyId) ?? db.families.find(f => normPhone(f.phone) === n);
         const fam: Family = existingFam ?? { id: uid("FAM"), name: `${name.split(" ")[0]}'s Household`, phone: p, createdAt: new Date().toISOString() };
-        const cus: Customer = { id: `CUS-${pad(db.customers.length + 1)}`, familyId: fam.id, name, phone: p, createdAt: new Date().toISOString(), measurements: [] };
+        const cus: Customer = { id: makeCustomerId(fam.name, db.customers), familyId: fam.id, name, phone: p, createdAt: new Date().toISOString(), measurements: [] };
         setDb(d => ({
           ...d,
           families: existingFam ? d.families : [...d.families, fam],
@@ -209,10 +220,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return fam;
       },
       addCustomer: (c) => {
-        const cus: Customer = { ...c, id: `CUS-${pad(db.customers.length + 1)}`, createdAt: new Date().toISOString(), measurements: [] };
+        const fam = db.families.find(f => f.id === c.familyId);
+        const { id: given, ...rest } = c;
+        const id = given && CUSTOMER_ID_RE.test(given) && !db.customers.some(x => x.id === given)
+          ? given
+          : makeCustomerId(fam?.name ?? "", db.customers);
+        const cus: Customer = { ...rest, id, createdAt: new Date().toISOString(), measurements: [] };
         setDb(d => ({ ...d, customers: [...d.customers, cus] }));
         log({ type: "customer_added", summary: `Added member ${cus.name}`, familyId: cus.familyId, customerId: cus.id, actor: actor() });
-        if (online) backend.customers.create(customerCreate(c)).then((srv: any) => { R.customer[cus.id] = srv.id; }).catch(warn);
+        if (online) backend.customers.create(customerCreate(rest)).then((srv: any) => { R.customer[cus.id] = srv.id; }).catch(warn);
         return cus;
       },
       updateCustomer: (id, patch) => {

@@ -3,6 +3,8 @@ import { useStore } from "../data/store";
 import { Button } from "../components/ui/ui";
 import { Icon } from "../components/Icon";
 import { GarmentArt, type GarmentType } from "../components/GarmentArt";
+import { useTilt } from "../components/festive/useTilt";
+import { Logo } from "../components/Logo";
 import { inr } from "../lib/format";
 import "./showcase.css";
 
@@ -71,11 +73,12 @@ export function Showcase({ onEnter, onBack, loggedIn }: { onEnter: () => void; o
   const scRef = useRef<HTMLDivElement>(null);
   const figRef = useRef<HTMLDivElement>(null);
   useScrollChrome(scRef, figRef);
+  useTilt(scRef);
 
   return (
     <div className="sc" ref={scRef}>
       <div className="sc-bar">
-        <button className="logo" onClick={scrollTop} aria-label="Back to top"><span className="mark">S</span> Silai</button>
+        <button className="logo" onClick={scrollTop} aria-label="Back to top"><Logo size={26} className="sc-logo-mark" /> Silaai</button>
         <div className="grow" />
         <a href="#gallery" className="hide-sm">Collection</a>
         <a href="#contact" className="hide-sm">Contact</a>
@@ -101,8 +104,9 @@ export function Showcase({ onEnter, onBack, loggedIn }: { onEnter: () => void; o
         {/* HERO */}
         <section className="hero">
           <div data-reveal>
-            <span className="eyebrow">Silai · Tailoring Studio</span>
+            <span className="eyebrow">सिलाई · Silaai Studio</span>
             <h1>Where fabric<br />becomes <em>heirloom</em>.</h1>
+            <p className="hero-tag">Measured to you. Stitched by hand.</p>
             <p>
               A family atelier for bridal, festive and everyday wear, measured, stitched and finished by hand.
               Browse the collection, then step into your family portal to track every order, fitting and payment.
@@ -114,7 +118,7 @@ export function Showcase({ onEnter, onBack, loggedIn }: { onEnter: () => void; o
           </div>
           <div className="hero-figure" aria-hidden ref={figRef} data-reveal style={{ transitionDelay: "0.08s" }}>
             {(["lehenga", "sherwani", "saree", "anarkali", "kurta", "blouse"] as GarmentType[]).map((t, i) => (
-              <div className="h-cell" key={i}><GarmentArt type={t} palette={["maroon", "cream", "sage", "ochre", "indigo", "clay"][i] as any} /></div>
+              <div className="h-cell" key={i} data-tilt><GarmentArt type={t} palette={["maroon", "cream", "sage", "ochre", "indigo", "clay"][i] as any} /></div>
             ))}
           </div>
         </section>
@@ -138,7 +142,7 @@ export function Showcase({ onEnter, onBack, loggedIn }: { onEnter: () => void; o
           </div>
           <div className="g-grid">
             {PIECES.map((pc, i) => (
-              <article className="g-card" key={i} data-reveal style={{ transitionDelay: `${(i % 4) * 0.06}s` }}>
+              <article className="g-card" key={i} data-reveal data-tilt style={{ transitionDelay: `${(i % 4) * 0.06}s` }}>
                 <div className="g-art"><GarmentArt type={pc.type} palette={pc.palette as any} /></div>
                 <div className="g-meta">
                   <div className="g-name">{pc.name}</div>
@@ -194,7 +198,7 @@ export function Showcase({ onEnter, onBack, loggedIn }: { onEnter: () => void; o
         </section>
 
         <footer className="sc-foot">
-          <span>© {new Date().getFullYear()} Silai Studio · Crafted with care.</span>
+          <span>© {new Date().getFullYear()} Silaai Studio · Crafted with care.</span>
           <span>{loggedIn ? "" : "Family portal · sign in with your phone number"}</span>
         </footer>
       </div>
