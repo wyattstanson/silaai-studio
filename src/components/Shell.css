@@ -108,7 +108,7 @@
   display: flex; flex-direction: column; padding: 12px 10px; gap: 2px; overflow-y: auto;
 }
 .brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 12px; }
-.brand-mark { color: var(--maroon); flex: none; }
+.brand-mark { color: var(--text); flex: none; }
 .brand .mark {
   width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
   background: var(--maroon);

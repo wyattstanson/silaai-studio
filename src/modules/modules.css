@@ -61,6 +61,11 @@
 .meas-cell { background: var(--surface); border: 1px solid var(--hairline); border-radius: 8px; padding: 7px 9px; }
 .meas-cell .m-lbl { font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; }
 .meas-cell .m-val { font-size: 15px; font-weight: 600; font-family: var(--font-display); }
+.id-preview { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: var(--r-sm); background: var(--surface-2); border: 1px solid var(--hairline-soft); }
+.id-preview > span { font-size: 12px; font-weight: 600; color: var(--text-soft); }
+.id-preview > b { font-family: var(--font-mono, monospace); font-size: 14px; letter-spacing: 0.03em; color: var(--acacia-deep); }
+:root[data-theme="dark"] .id-preview > b { color: var(--acacia); }
+.id-preview > em { margin-left: auto; font-size: 11.5px; color: var(--text-faint); font-style: normal; }
 .phone-inl { display: flex; align-items: stretch; }
 .phone-inl > span { display: grid; place-items: center; padding: 0 11px; font-size: 13px; font-weight: 600; color: var(--text-soft); background: var(--surface-2); border: 1px solid var(--hairline); border-right: none; border-radius: var(--r-sm) 0 0 var(--r-sm); }
 .phone-inl .input { border-radius: 0 var(--r-sm) var(--r-sm) 0; }

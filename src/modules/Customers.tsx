@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useStore, CUSTOMER_ID_RE } from "../data/store";
+import { useStore } from "../data/store";
 import { Avatar, Badge, Button, Card, Field, Input, Modal, Select, Textarea, Empty } from "../components/ui/ui";
 import { Icon } from "../components/Icon";
 import { fmtDate, measurementStale, daysUntil, phoneDigits, phoneLocal, phoneIntl } from "../lib/format";
@@ -98,26 +98,26 @@ export function Customers() {
 
   function AddCustomer({ familyId, onClose }: { familyId: string; onClose: () => void }) {
     const [name, setName] = useState(""); const [phone, setPhone] = useState(""); const [gender, setGender] = useState<"F" | "M" | "—">("F");
-    const [cid, setCid] = useState("");
-    const fam = db.families.find(f => f.id === familyId);
-    const autoPrefix = (fam?.name ?? "").replace(/[^a-zA-Z]/g, "").slice(0, 3).toUpperCase().padEnd(3, "X");
-    const idValid = cid === "" || CUSTOMER_ID_RE.test(cid);
+    // Customer ID is assigned automatically from the name — never typed.
+    const previewId = (() => {
+      const pre = name.replace(/[^a-zA-Z]/g, "").slice(0, 3).toUpperCase().padEnd(3, "X");
+      const used = db.customers.filter(c => c.id.startsWith(pre + "-")).map(c => parseInt(c.id.slice(4), 10)).filter(n => !Number.isNaN(n));
+      return `${pre}-${String((used.length ? Math.max(...used) : 0) + 1).padStart(3, "0")}`;
+    })();
     return (
       <Modal title="New member" onClose={onClose}
         footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" disabled={!name.trim() || (phone.length > 0 && phoneDigits(phone).length !== 10) || !idValid} onClick={() => { const c = addCustomer({ familyId, name: name.trim(), phone: phoneIntl(phone) || undefined, gender, id: cid.trim() || undefined }); onClose(); setDetail(c); }}>Add member</Button></>}>
+          <Button variant="primary" disabled={!name.trim() || (phone.length > 0 && phoneDigits(phone).length !== 10)} onClick={() => { const c = addCustomer({ familyId, name: name.trim(), phone: phoneIntl(phone) || undefined, gender }); onClose(); setDetail(c); }}>Add member</Button></>}>
         <Field label="Name"><Input value={name} placeholder="Full name" onChange={e => setName(e.target.value)} /></Field>
         <div className="grid-2">
           <Field label="Own phone"><div className="phone-inl"><span>+91</span><Input inputMode="numeric" value={phoneLocal(phone)} placeholder="falls back to family" onChange={e => setPhone(phoneDigits(e.target.value))} /></div></Field>
           <Field label="Gender"><Select value={gender} onChange={e => setGender(e.target.value as any)}><option value="F">Female</option><option value="M">Male</option><option value="—">—</option></Select></Field>
         </div>
-        <Field label="Customer ID (optional)">
-          <Input value={cid} placeholder={`auto: ${autoPrefix}001`} maxLength={6}
-            onChange={e => setCid(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6))} />
-          <span style={{ fontSize: 11.5, color: idValid ? "var(--text-faint)" : "var(--clay)" }}>
-            {idValid ? "3 letters + 3 digits, e.g. " + autoPrefix + "001 — leave blank to auto-generate" : "Must be 3 letters then 3 digits (e.g. " + autoPrefix + "001)"}
-          </span>
-        </Field>
+        <div className="id-preview">
+          <span>Customer ID</span>
+          <b>{name.trim() ? previewId : "—"}</b>
+          <em>assigned automatically</em>
+        </div>
       </Modal>
     );
   }

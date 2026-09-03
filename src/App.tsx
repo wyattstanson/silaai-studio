@@ -5,6 +5,7 @@ import { Shell, type NavItem } from "./components/Shell";
 import { Dashboard } from "./modules/Dashboard";
 import { Orders } from "./modules/Orders";
 import { Customers } from "./modules/Customers";
+import { Measurements } from "./modules/Measurements";
 import { Payments } from "./modules/Payments";
 import { Reports } from "./modules/Reports";
 import { Settings } from "./modules/Settings";
@@ -43,6 +44,7 @@ function Studio({ onShowcase }: { onShowcase: () => void }) {
   if (on("tailoring")) {
     nav.push({ id: "orders", label: "Orders", icon: "orders", group: "Tailoring", count: activeOrders, tone: "accent" });
     nav.push({ id: "customers", label: "Customers", icon: "customers", group: "Tailoring", count: db.customers.length, tone: "sage" });
+    nav.push({ id: "measurements", label: "Measurements", icon: "measure", group: "Tailoring", tone: "sage" });
   }
   const openReq = db.requests.filter(r => ["submitted", "acknowledged"].includes(r.status)).length;
   nav.push({ id: "requests", label: "Requests", icon: "requests", group: "Manage", count: openReq, tone: "clay" });
@@ -63,6 +65,7 @@ function Studio({ onShowcase }: { onShowcase: () => void }) {
       {view === "dashboard" && <Dashboard go={setActive} />}
       {view === "orders" && <Orders />}
       {view === "customers" && <Customers />}
+      {view === "measurements" && <Measurements />}
       {view === "requests" && <Requests />}
       {view === "admin" && <Admin />}
       {view === "payments" && <Payments />}

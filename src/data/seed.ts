@@ -28,19 +28,19 @@ export function seed(): DB {
       { id: "USR-03", phone: "+91 99206 44510", name: "Sana Khan", role: "member", familyId: "FAM-03", createdAt: day(-138), lastLogin: day(-2) },
     ],
     activity: [
-      { id: "A1", at: day(-30), type: "order_placed", summary: "Placed order for Kurta Set (S-46)", familyId: "FAM-04", customerId: "MEH001", orderId: "ORD-0046" },
-      { id: "A2", at: day(-25), type: "order_placed", summary: "Placed order for Anarkali Suit (S-44)", familyId: "FAM-03", customerId: "KHA001", orderId: "ORD-0044" },
-      { id: "A3", at: day(-18), type: "order_placed", summary: "Placed wedding order, Bridal Lehenga (S-42)", familyId: "FAM-01", customerId: "SHA001", orderId: "ORD-0042" },
-      { id: "A4", at: day(-18), type: "payment", summary: "Advance received, Bridal Lehenga", familyId: "FAM-01", customerId: "SHA001", orderId: "ORD-0042", amount: 10000 },
-      { id: "A5", at: day(-9), type: "payment", summary: "Balance settled, Kurta Set", familyId: "FAM-04", customerId: "MEH001", orderId: "ORD-0046", amount: 2100 },
-      { id: "A6", at: day(-8), type: "measurement", summary: "New measurement recorded, Silk Saree Blouse", familyId: "FAM-02", customerId: "IYE001" },
-      { id: "A7", at: day(-3), type: "payment", summary: "Balance settled, Anarkali Suit", familyId: "FAM-03", customerId: "KHA001", orderId: "ORD-0044", amount: 3200 },
-      { id: "A8", at: day(-1), type: "stage", summary: "Anarkali Suit marked Ready for dispatch", familyId: "FAM-03", customerId: "KHA001", orderId: "ORD-0044" },
+      { id: "A1", at: day(-30), type: "order_placed", summary: "Placed order for Kurta Set (S-46)", familyId: "FAM-04", customerId: "PRI-001", orderId: "ORD-0046" },
+      { id: "A2", at: day(-25), type: "order_placed", summary: "Placed order for Anarkali Suit (S-44)", familyId: "FAM-03", customerId: "SAN-001", orderId: "ORD-0044" },
+      { id: "A3", at: day(-18), type: "order_placed", summary: "Placed wedding order, Bridal Lehenga (S-42)", familyId: "FAM-01", customerId: "ANJ-001", orderId: "ORD-0042" },
+      { id: "A4", at: day(-18), type: "payment", summary: "Advance received, Bridal Lehenga", familyId: "FAM-01", customerId: "ANJ-001", orderId: "ORD-0042", amount: 10000 },
+      { id: "A5", at: day(-9), type: "payment", summary: "Balance settled, Kurta Set", familyId: "FAM-04", customerId: "PRI-001", orderId: "ORD-0046", amount: 2100 },
+      { id: "A6", at: day(-8), type: "measurement", summary: "New measurement recorded, Silk Saree Blouse", familyId: "FAM-02", customerId: "MEE-001" },
+      { id: "A7", at: day(-3), type: "payment", summary: "Balance settled, Anarkali Suit", familyId: "FAM-03", customerId: "SAN-001", orderId: "ORD-0044", amount: 3200 },
+      { id: "A8", at: day(-1), type: "stage", summary: "Anarkali Suit marked Ready for dispatch", familyId: "FAM-03", customerId: "SAN-001", orderId: "ORD-0044" },
     ],
     requests: [
-      { id: "REQ-0001", code: "REQ-0001", customerId: "SHA001", familyId: "FAM-01", type: "pickup", status: "scheduled", preferredDate: day(2), timeSlot: "11am – 1pm", address: "14, Rose Villa, Katpadi", notes: "Two saree blouses to stitch.", createdAt: day(-3), updatedAt: day(-1), history: [{ at: day(-3), status: "submitted" }, { at: day(-2), status: "acknowledged" }, { at: day(-1), status: "scheduled", note: "Pickup confirmed" }] },
-      { id: "REQ-0002", code: "REQ-0002", customerId: "IYE001", familyId: "FAM-02", type: "alteration", status: "submitted", orderId: "ORD-0043", garment: "Silk Saree Blouse", notes: "Sleeves a touch tight.", createdAt: day(-1), updatedAt: day(-1), history: [{ at: day(-1), status: "submitted" }] },
-      { id: "REQ-0003", code: "REQ-0003", customerId: "KHA001", familyId: "FAM-03", type: "fitting", status: "acknowledged", preferredDate: day(4), timeSlot: "4pm – 6pm", notes: "Trial for the Anarkali before dispatch.", createdAt: day(-2), updatedAt: day(-1), history: [{ at: day(-2), status: "submitted" }, { at: day(-1), status: "acknowledged" }] },
+      { id: "REQ-0001", code: "REQ-0001", customerId: "ANJ-001", familyId: "FAM-01", type: "pickup", status: "scheduled", preferredDate: day(2), timeSlot: "11am – 1pm", address: "14, Rose Villa, Katpadi", notes: "Two saree blouses to stitch.", createdAt: day(-3), updatedAt: day(-1), history: [{ at: day(-3), status: "submitted" }, { at: day(-2), status: "acknowledged" }, { at: day(-1), status: "scheduled", note: "Pickup confirmed" }] },
+      { id: "REQ-0002", code: "REQ-0002", customerId: "MEE-001", familyId: "FAM-02", type: "alteration", status: "submitted", orderId: "ORD-0043", garment: "Silk Saree Blouse", notes: "Sleeves a touch tight.", createdAt: day(-1), updatedAt: day(-1), history: [{ at: day(-1), status: "submitted" }] },
+      { id: "REQ-0003", code: "REQ-0003", customerId: "SAN-001", familyId: "FAM-03", type: "fitting", status: "acknowledged", preferredDate: day(4), timeSlot: "4pm – 6pm", notes: "Trial for the Anarkali before dispatch.", createdAt: day(-2), updatedAt: day(-1), history: [{ at: day(-2), status: "submitted" }, { at: day(-1), status: "acknowledged" }] },
     ],
     families: [
       { id: "FAM-01", name: "Sharma Household", phone: "+91 98110 20304", createdAt: day(-320), note: "Regulars, bridal & festive" },
@@ -50,7 +50,7 @@ export function seed(): DB {
     ],
     customers: [
       {
-        id: "SHA001", familyId: "FAM-01", name: "Anjali Sharma", gender: "F", phone: "+91 98110 20304", createdAt: day(-318),
+        id: "ANJ-001", familyId: "FAM-01", name: "Anjali Sharma", gender: "F", phone: "+91 98110 20304", createdAt: day(-318),
         measurements: [{
           version: 1, id: "M1", takenAt: day(-20), garment: "Bridal Blouse",
           values: [{ label: "Chest", value: "36\"" }, { label: "Waist", value: "30\"" }, { label: "Shoulder", value: "14\"" }, { label: "Sleeve", value: "9\"" }],
@@ -58,28 +58,28 @@ export function seed(): DB {
         }],
       },
       {
-        id: "SHA002", familyId: "FAM-01", name: "Ravi Sharma", gender: "M", phone: "+91 98110 20304", createdAt: day(-300),
+        id: "RAV-001", familyId: "FAM-01", name: "Ravi Sharma", gender: "M", phone: "+91 98110 20304", createdAt: day(-300),
         measurements: [{
           version: 1, id: "M2", takenAt: day(-95), garment: "Sherwani",
           values: [{ label: "Chest", value: "42\"" }, { label: "Length", value: "44\"" }, { label: "Shoulder", value: "18\"" }],
         }],
       },
       {
-        id: "IYE001", familyId: "FAM-02", name: "Meera Iyer", gender: "F", phone: "+91 90045 88123", createdAt: day(-205),
+        id: "MEE-001", familyId: "FAM-02", name: "Meera Iyer", gender: "F", phone: "+91 90045 88123", createdAt: day(-205),
         measurements: [{
           version: 1, id: "M3", takenAt: day(-8), garment: "Silk Saree Blouse",
           values: [{ label: "Chest", value: "34\"" }, { label: "Waist", value: "28\"" }, { label: "Sleeve", value: "6\"" }],
         }],
       },
       {
-        id: "KHA001", familyId: "FAM-03", name: "Sana Khan", gender: "F", phone: "+91 99206 44510", createdAt: day(-138),
+        id: "SAN-001", familyId: "FAM-03", name: "Sana Khan", gender: "F", phone: "+91 99206 44510", createdAt: day(-138),
         measurements: [{
           version: 1, id: "M4", takenAt: day(-40), garment: "Anarkali",
           values: [{ label: "Chest", value: "38\"" }, { label: "Waist", value: "32\"" }, { label: "Length", value: "52\"" }],
         }],
       },
       {
-        id: "MEH001", familyId: "FAM-04", name: "Priya Mehta", gender: "F", createdAt: day(-70),
+        id: "PRI-001", familyId: "FAM-04", name: "Priya Mehta", gender: "F", createdAt: day(-70),
         measurements: [{
           version: 1, id: "M5", takenAt: day(-64), garment: "Lehenga",
           values: [{ label: "Chest", value: "35\"" }, { label: "Waist", value: "29\"" }, { label: "Length", value: "40\"" }],
@@ -88,7 +88,7 @@ export function seed(): DB {
     ],
     orders: [
       {
-        id: "ORD-0042", code: "S-42", customerId: "SHA001", kind: "wedding", garment: "Bridal Lehenga",
+        id: "ORD-0042", code: "S-42", customerId: "ANJ-001", kind: "wedding", garment: "Bridal Lehenga",
         materialSource: "shop", fulfilment: "local", design: "Zardozi bodice, flared skirt", material: "Raw silk, maroon",
         samplePhoto: "🪡", qty: 1, priority: "express", stage: "stitching", deadline: true, placedAt: day(-18), deliveryDate: day(3),
         measurementSnapshot: { garment: "Bridal Blouse", version: 1, values: [{ label: "Chest", value: "36\"" }, { label: "Waist", value: "30\"" }, { label: "Shoulder", value: "14\"" }, { label: "Sleeve", value: "9\"" }] },
@@ -96,14 +96,14 @@ export function seed(): DB {
         payments: [{ id: "P1", at: day(-18), kind: "advance", amount: 10000, method: "upi" }],
       },
       {
-        id: "ORD-0043", code: "S-43", customerId: "IYE001", kind: "stitching", garment: "Silk Saree Blouse",
+        id: "ORD-0043", code: "S-43", customerId: "MEE-001", kind: "stitching", garment: "Silk Saree Blouse",
         materialSource: "outside", fulfilment: "local", design: "Boat neck, princess cut", material: "Customer's Kanjivaram",
         qty: 2, priority: "normal", stage: "cutting", deadline: false, placedAt: day(-6), deliveryDate: day(6),
         price: 2400, remarks: "Match fall colour to saree.",
         payments: [{ id: "P2", at: day(-6), kind: "advance", amount: 800, method: "cash" }],
       },
       {
-        id: "ORD-0044", code: "S-44", customerId: "KHA001", kind: "stitching", garment: "Anarkali Suit",
+        id: "ORD-0044", code: "S-44", customerId: "SAN-001", kind: "stitching", garment: "Anarkali Suit",
         materialSource: "shop", fulfilment: "outside", design: "Full flare, churidar", material: "Georgette, teal",
         samplePhoto: "📸", qty: 1, priority: "normal", stage: "ready", deadline: false, placedAt: day(-25), deliveryDate: day(-1),
         price: 5200, remarks: "Courier to Pune, awaiting pickup.",
@@ -113,14 +113,14 @@ export function seed(): DB {
         ],
       },
       {
-        id: "ORD-0045", code: "S-45", customerId: "SHA002", kind: "wedding", garment: "Sherwani + Stole",
+        id: "ORD-0045", code: "S-45", customerId: "RAV-001", kind: "wedding", garment: "Sherwani + Stole",
         materialSource: "shop", fulfilment: "local", design: "Cream brocade, self-work", material: "Brocade, cream",
         qty: 1, priority: "urgent", stage: "new", deadline: true, placedAt: day(-2), deliveryDate: day(1),
         price: 16500, remarks: "Groom's engagement, rush.",
         payments: [{ id: "P5", at: day(-2), kind: "advance", amount: 6000, method: "card" }],
       },
       {
-        id: "ORD-0046", code: "S-46", customerId: "MEH001", kind: "stitching", garment: "Kurta Set",
+        id: "ORD-0046", code: "S-46", customerId: "PRI-001", kind: "stitching", garment: "Kurta Set",
         materialSource: "outside", fulfilment: "local", design: "Straight cut, mandarin collar", material: "Cotton, indigo",
         qty: 3, priority: "normal", stage: "closed", deadline: false, placedAt: day(-30), deliveryDate: day(-9),
         price: 3600, remarks: "Delivered & settled.",

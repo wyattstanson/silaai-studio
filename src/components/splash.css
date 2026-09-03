@@ -10,7 +10,7 @@
 .splash.done { opacity: 0; visibility: hidden; pointer-events: none; }
 
 .splash-inner { display: grid; justify-items: center; gap: 20px; animation: splash-in .7s var(--ease) both; }
-.splash-logo { color: #f4e7c5; }
+.splash-logo { color: #f4e7c5; --logo-accent: #9fb2e6; }
 .splash-tag {
   font-family: var(--font-display, Georgia, serif);
   font-size: 15px; letter-spacing: 0.02em; color: #cdba96; font-style: italic;

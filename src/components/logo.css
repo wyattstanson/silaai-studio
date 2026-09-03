@@ -1,0 +1,7 @@
+/* Logo colours. Ink follows `currentColor` (set by each placement); the
+   navy accent is a token that lightens on dark grounds for contrast. */
+.logo-svg { --logo-accent: #26305f; }
+:root[data-theme="dark"] .logo-svg { --logo-accent: #8ea2d8; }
+
+.logo-accent-stroke { stroke: var(--logo-accent); }
+.logo-accent-fill { fill: var(--logo-accent); }

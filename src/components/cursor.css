@@ -1,33 +1,24 @@
-/* Custom pointer. Native cursor is hidden only while the follower is
-   mounted (fine-pointer, motion allowed); everything else is unaffected. */
+/* Tailor's-needle pointer. Native cursor is hidden only while the needle
+   is mounted (fine-pointer). Touch keeps its native behaviour. */
 .has-custom-cursor,
 .has-custom-cursor * { cursor: none !important; }
 
-.cursor-dot, .cursor-ring {
+.cursor-needle {
   position: fixed; top: 0; left: 0; z-index: 100000;
   pointer-events: none; opacity: 0;
-  margin-left: 0; margin-top: 0;
-  transition: opacity .2s ease;
+  transition: opacity .18s ease;
   will-change: transform;
 }
-.cursor-dot {
-  width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px;
-  border-radius: 50%; background: var(--acacia, #d99a2b);
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.25);
+.cursor-needle .n {
+  display: block;
+  margin: -2px 0 0 -2px;               /* align the sharp tip with the hotspot */
+  transform-origin: 2px 2px;
+  transition: transform .12s var(--ease), filter .12s var(--ease);
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35));
 }
-.cursor-ring {
-  width: 30px; height: 30px; margin: -15px 0 0 -15px;
-  border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--acacia, #d99a2b) 80%, transparent);
-  transition: width .18s var(--ease), height .18s var(--ease), margin .18s var(--ease),
-              border-color .18s var(--ease), background .18s var(--ease), opacity .2s ease;
-}
-.cursor-ring.is-active {
-  width: 46px; height: 46px; margin: -23px 0 0 -23px;
-  border-color: var(--acacia, #d99a2b);
-  background: color-mix(in srgb, var(--acacia, #d99a2b) 14%, transparent);
-}
-.cursor-ring.is-down { width: 22px; height: 22px; margin: -11px 0 0 -11px; }
+.cursor-needle .n.is-active { transform: scale(1.22) rotate(-7deg); }
+.cursor-needle .n.is-down { transform: scale(0.88); }
 
-@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
-  .cursor-dot, .cursor-ring { display: none !important; }
+@media (hover: none), (pointer: coarse) {
+  .cursor-needle { display: none !important; }
 }
