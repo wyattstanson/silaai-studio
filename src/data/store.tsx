@@ -10,7 +10,7 @@ import {
   paymentCreate, measurementCreate, requestCreate, stageUp, type Refs,
 } from "./remote";
 
-const KEY = "silai.db.v5";
+const KEY = "silai.db.v6";
 const SESSION_KEY = "silai.session";
 const THEME_KEY = "silai.theme";
 
@@ -71,7 +71,9 @@ interface Store {
   clearDemoCustomers: () => void;
   addMeasurement: (customerId: string, m: Omit<Measurement, "id" | "version">) => void;
   addRequest: (r: Omit<ServiceRequest, "id" | "code" | "status" | "createdAt" | "updatedAt" | "history">) => ServiceRequest;
-  setRequestStatus: (id: string, status: RequestStatus, note?: string) => void;
+  setRequestStatus: (id: string, status: RequestStatus, note?: string, patch?: Partial<ServiceRequest>) => void;
+  sendMessage: (customerId: string, from: "owner" | "customer", text: string) => void;
+  markThreadRead: (customerId: string, side: "owner" | "customer") => void;
   addOrder: (o: Omit<Order, "id" | "code" | "payments" | "placedAt">) => Order;
   updateOrder: (id: string, patch: Partial<Order>) => void;
   setStage: (id: string, stage: OrderStage) => void;
@@ -287,12 +289,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
         return req;
       },
-      setRequestStatus: (id, status, note) => {
+      setRequestStatus: (id, status, note, patch) => {
         const now = new Date().toISOString();
         const rq = db.requests.find(x => x.id === id);
-        setDb(d => ({ ...d, requests: d.requests.map(x => x.id === id ? { ...x, status, updatedAt: now, history: [...x.history, { at: now, status, note }] } : x) }));
+        setDb(d => ({ ...d, requests: d.requests.map(x => x.id === id ? { ...x, ...patch, status, updatedAt: now, history: [...x.history, { at: now, status, note }] } : x) }));
         if (rq) log({ type: "customer_added", summary: `Request ${rq.code} ${status.replace(/_/g, " ")}`, familyId: rq.familyId, customerId: rq.customerId, actor: actor() });
         if (online && R.request[id]) backend.requests.update(R.request[id], stageUp(status), note).catch(warn);
+      },
+      sendMessage: (customerId, from, text) => {
+        const t = text.trim();
+        if (!t) return;
+        const msg = { id: uid("MSG"), customerId, from, text: t, at: new Date().toISOString(), read: false };
+        setDb(d => ({ ...d, messages: [...(d.messages ?? []), msg] }));
+      },
+      markThreadRead: (customerId, side) => {
+        // mark messages FROM the other side as read; no-op if nothing changes
+        // (guards against a render loop, since .map always makes a new array)
+        const other = side === "owner" ? "customer" : "owner";
+        const need = (db.messages ?? []).some(m => m.customerId === customerId && m.from === other && !m.read);
+        if (!need) return;
+        setDb(d => ({ ...d, messages: (d.messages ?? []).map(m => m.customerId === customerId && m.from === other && !m.read ? { ...m, read: true } : m) }));
       },
 
       addOrder: (o) => {

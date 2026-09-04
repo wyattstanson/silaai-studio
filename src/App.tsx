@@ -15,6 +15,7 @@ import { Showcase } from "./modules/Showcase";
 import { Auth } from "./modules/Auth";
 import { Portal } from "./modules/Portal";
 import { Requests } from "./modules/Requests";
+import { OwnerMessages, CustomerMessages } from "./modules/Chat";
 import { OrderDetail } from "./modules/OrderSheet";
 import { CustomerAdmin } from "./modules/CustomerAdmin";
 import { Empty } from "./components/ui/ui";
@@ -47,7 +48,9 @@ function Studio({ onShowcase }: { onShowcase: () => void }) {
     nav.push({ id: "measurements", label: "Measurements", icon: "measure", group: "Tailoring", tone: "sage" });
   }
   const openReq = db.requests.filter(r => ["submitted", "acknowledged"].includes(r.status)).length;
+  const ownerUnread = (db.messages ?? []).filter(m => m.from === "customer" && !m.read).length;
   nav.push({ id: "requests", label: "Requests", icon: "requests", group: "Manage", count: openReq, tone: "clay" });
+  nav.push({ id: "messages", label: "Messages", icon: "mail", group: "Manage", count: ownerUnread, tone: "accent" });
   nav.push({ id: "admin", label: "Admin Console", icon: "settings", group: "Manage", tone: "clay" });
   if (on("sales")) nav.push({ id: "sales", label: "Material Sales", icon: "sales", group: "Counter", tone: "sage" });
   if (on("payments")) nav.push({ id: "payments", label: "Payments", icon: "payments", group: "Money", tone: "accent" });
@@ -67,6 +70,7 @@ function Studio({ onShowcase }: { onShowcase: () => void }) {
       {view === "customers" && <Customers />}
       {view === "measurements" && <Measurements />}
       {view === "requests" && <Requests />}
+      {view === "messages" && <OwnerMessages />}
       {view === "admin" && <Admin />}
       {view === "payments" && <Payments />}
       {view === "reports" && <Reports />}
@@ -86,11 +90,13 @@ function MemberPortal({ onShowcase }: { onShowcase: () => void }) {
   const activeOrders = db.orders.filter(o => o.customerId === cid && !isClosed(o.stage)).length;
 
   const openReq = db.requests.filter(r => r.customerId === cid && ["submitted", "acknowledged", "scheduled", "in_progress"].includes(r.status)).length;
+  const custUnread = (db.messages ?? []).filter(m => m.customerId === cid && m.from === "owner" && !m.read).length;
   const nav: NavItem[] = [
     { id: "portal", label: "Overview", icon: "overview", group: "My Studio", tone: "neutral" },
     { id: "myorders", label: "My Orders", icon: "orders", group: "My Studio", count: activeOrders, tone: "accent" },
     { id: "requests", label: "Requests", icon: "requests", group: "My Studio", count: openReq, tone: "clay" },
     { id: "measurements", label: "Measurements", icon: "measure", group: "My Studio", tone: "sage" },
+    { id: "messages", label: "Messages", icon: "mail", group: "My Studio", count: custUnread, tone: "accent" },
     { id: "history", label: "History", icon: "history", group: "My Studio", tone: "clay" },
   ];
   const view = nav.some(n => n.id === active) ? active : "portal";
@@ -99,7 +105,7 @@ function MemberPortal({ onShowcase }: { onShowcase: () => void }) {
   return (
     <Shell nav={nav} active={view} onNavigate={setActive} crumb={crumb} onShowcase={onShowcase} onLogout={logout} canManage={false}
       viewKey={view} renderWindow={win => <WindowContent win={win} readOnly />}>
-      {view === "requests" ? <Requests /> : <Portal active={view} go={setActive} />}
+      {view === "requests" ? <Requests /> : view === "messages" ? <CustomerMessages /> : <Portal active={view} go={setActive} />}
     </Shell>
   );
 }

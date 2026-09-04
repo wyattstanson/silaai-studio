@@ -54,7 +54,7 @@ export function Segmented<T extends string>({ options, value, onChange }: {
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return <div className="field"><label>{label}</label>{children}</div>;
 }
-export function Input(p: InputHTMLAttributes<HTMLInputElement>) { return <input className="input" {...p} />; }
+export function Input({ className, ...p }: InputHTMLAttributes<HTMLInputElement>) { return <input className={"input" + (className ? " " + className : "")} {...p} />; }
 export function Textarea(p: TextareaHTMLAttributes<HTMLTextAreaElement>) { return <textarea className="textarea" {...p} />; }
 export function Select(p: SelectHTMLAttributes<HTMLSelectElement>) { return <select className="select" {...p} />; }
 

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useStore } from "../data/store";
 import { Avatar, Badge, Button, Card, Field, Input, Modal, Select, Textarea, Empty } from "../components/ui/ui";
 import { Icon } from "../components/Icon";
-import { fmtDate, measurementStale, daysUntil, phoneDigits, phoneLocal, phoneIntl } from "../lib/format";
+import { fmtDate, measurementStale, daysUntil, phoneDigits, phoneLocal, phoneIntl, isMeasureValue } from "../lib/format";
 import type { Customer } from "../data/types";
 import "./modules.css";
 
@@ -191,17 +191,20 @@ function AddMeasurement({ onClose, onSave }: { onClose: () => void; onSave: (m: 
   const [note, setNote] = useState("");
   const [rows, setRows] = useState([{ label: "Chest", value: "" }, { label: "Waist", value: "" }, { label: "Shoulder", value: "" }, { label: "Length", value: "" }]);
   const set = (i: number, k: "label" | "value", v: string) => setRows(rs => rs.map((r, j) => j === i ? { ...r, [k]: v } : r));
+  const bad = (v: string) => v.trim().length > 0 && !isMeasureValue(v);
+  const anyBad = rows.some(r => bad(r.value));
 
   return (
     <Modal title="Add measurement" onClose={onClose}
       footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button>
-        <Button variant="primary" disabled={!garment.trim()} onClick={() => onSave({ takenAt: new Date().toISOString(), garment: garment.trim(), values: rows.filter(r => r.value.trim()), note: note.trim() || undefined })}>Save</Button></>}>
+        <Button variant="primary" disabled={!garment.trim() || anyBad} onClick={() => onSave({ takenAt: new Date().toISOString(), garment: garment.trim(), values: rows.filter(r => r.value.trim()), note: note.trim() || undefined })}>Save</Button></>}>
       <Field label="Garment"><Input value={garment} placeholder="Blouse, Kurta, Suit…" onChange={e => setGarment(e.target.value)} /></Field>
       <div className="grid-2">
         {rows.map((r, i) => (
-          <Field key={i} label={r.label}><Input value={r.value} placeholder='e.g. 36"' onChange={e => set(i, "value", e.target.value)} /></Field>
+          <Field key={i} label={r.label}><Input value={r.value} placeholder='e.g. 36"' className={bad(r.value) ? "input-bad" : undefined} onChange={e => set(i, "value", e.target.value)} /></Field>
         ))}
       </div>
+      {anyBad && <div className="field-err">Use a number with an optional unit, e.g. 36, 36.5, 36" or 34"-36".</div>}
       <Field label="Note"><Textarea value={note} placeholder="Deep back, piping edge…" onChange={e => setNote(e.target.value)} /></Field>
     </Modal>
   );

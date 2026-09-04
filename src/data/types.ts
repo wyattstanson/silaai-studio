@@ -156,6 +156,16 @@ export interface ModuleDef {
   core: boolean;         // core modules can't be removed
 }
 
+// ---- Customer <-> owner chat --------------------------------
+export interface Message {
+  id: ID;
+  customerId: ID;          // the thread is per customer
+  from: "owner" | "customer";
+  text: string;
+  at: string;
+  read?: boolean;          // read by the other side
+}
+
 export interface DB {
   families: Family[];
   customers: Customer[];
@@ -164,5 +174,6 @@ export interface DB {
   users: User[];
   activity: ActivityEvent[];
   requests: ServiceRequest[];
+  messages: Message[];
   shop: { name: string; owner: string; batch: string; phone: string };
 }

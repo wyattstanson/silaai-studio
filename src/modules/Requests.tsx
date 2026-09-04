@@ -228,13 +228,25 @@ function RequestDetail({ request, onClose, manage, custName }: { request: Servic
       {manage && !["completed", "declined", "cancelled"].includes(request.status) && (
         <div className="card" style={{ padding: 14 }}>
           <span className="eyebrow">Manage</span>
-          {m.needs.includes("date") && (
-            <div className="row wrap" style={{ gap: 8, marginTop: 10, alignItems: "flex-end" }}>
-              <Field label="Schedule date"><Input type="date" value={schedDate} onChange={e => setSchedDate(e.target.value)} /></Field>
-              <Field label="Slot"><Select value={schedSlot} onChange={e => setSchedSlot(e.target.value)}>{TIME_SLOTS.map(s => <option key={s}>{s}</option>)}</Select></Field>
-              <Button onClick={() => schedDate && setRequestStatus(request.id, "scheduled", `Scheduled ${schedDate}, ${schedSlot}`)}>Schedule</Button>
+          {request.status === "submitted" && (
+            <div style={{ marginTop: 10 }}>
+              <Button variant="primary" size="sm" onClick={() => setRequestStatus(request.id, "acknowledged", "Acknowledged by studio")}>
+                <Icon name="check" size={13} style={{ marginRight: 6 }} />Accept request
+              </Button>
             </div>
           )}
+          {/* Always let the owner set a promised date/slot — required to schedule. */}
+          <div className="row wrap" style={{ gap: 8, marginTop: 12, alignItems: "flex-end" }}>
+            <Field label={request.type === "alteration" ? "Fitting date" : "Schedule date"}><Input type="date" value={schedDate} onChange={e => setSchedDate(e.target.value)} /></Field>
+            <Field label="Slot"><Select value={schedSlot} onChange={e => setSchedSlot(e.target.value)}>{TIME_SLOTS.map(s => <option key={s}>{s}</option>)}</Select></Field>
+            <Button variant="primary" disabled={!schedDate}
+              onClick={() => setRequestStatus(request.id, "scheduled",
+                `${request.type === "alteration" ? "Alteration accepted, fitting" : "Scheduled"} ${fmtDay(schedDate)} · ${schedSlot}`,
+                { preferredDate: new Date(schedDate).toISOString(), timeSlot: schedSlot })}>
+              {request.type === "alteration" ? "Accept & book fitting" : "Confirm date"}
+            </Button>
+          </div>
+          {!schedDate && <div className="faint" style={{ fontSize: 11.5, marginTop: 6 }}>Pick a date to confirm the schedule.</div>}
           <div className="row wrap" style={{ gap: 8, marginTop: 12, justifyContent: "space-between" }}>
             <Button variant="danger" size="sm" onClick={() => { setRequestStatus(request.id, "declined", "Declined by studio"); onClose(); }}>Decline</Button>
             {canConvert && <Button variant="primary" size="sm" onClick={convert}><Icon name="orders" size={13} style={{ marginRight: 6 }} />Create order</Button>}

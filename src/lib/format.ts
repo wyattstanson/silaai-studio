@@ -51,3 +51,12 @@ export const phoneIntl = (s: string) => {
   const d = phoneDigits(s);
   return d ? `+91 ${phoneLocal(d)}` : "";
 };
+
+/* A measurement value: a number (optional half/decimal) with an optional
+   unit (" / in / cm), optionally a range like 34"-36". */
+const MEASURE_ONE = /^\d{1,3}(\.\d{1,2})?\s?(?:"|''|in|inch(?:es)?|cm)?$/i;
+export const isMeasureValue = (v: string) => {
+  const s = v.trim();
+  if (!s) return false;
+  return s.split(/\s*-\s*/).every(p => MEASURE_ONE.test(p.trim()));
+};

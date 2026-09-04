@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useStore } from "../data/store";
 import { Avatar, Badge, Button, Card, Field, Input, Empty } from "../components/ui/ui";
 import { Icon } from "../components/Icon";
-import { fmtDate, measurementStale } from "../lib/format";
+import { fmtDate, measurementStale, isMeasureValue } from "../lib/format";
 import "./modules.css";
 
 /* Owner-side measurement book: every customer with their sizes on file,
@@ -79,15 +79,19 @@ function AddMeas({ onSave }: { onSave: (m: { takenAt: string; garment: string; v
   const [garment, setGarment] = useState("");
   const [rows, setRows] = useState([{ label: "Chest", value: "" }, { label: "Waist", value: "" }, { label: "Shoulder", value: "" }, { label: "Length", value: "" }, { label: "Sleeve", value: "" }]);
   const set = (i: number, v: string) => setRows(rs => rs.map((r, j) => j === i ? { ...r, value: v } : r));
+  const bad = (v: string) => v.trim().length > 0 && !isMeasureValue(v);
+  const anyBad = rows.some(r => bad(r.value));
   return (
     <div style={{ padding: 14 }}>
       <Field label="Garment"><Input value={garment} placeholder="Blouse, Kurta, Lehenga…" autoFocus onChange={e => setGarment(e.target.value)} /></Field>
       <div className="meas-grid" style={{ marginTop: 10 }}>
         {rows.map((r, i) => (
-          <div key={i}><div className="m-lbl" style={{ marginBottom: 3 }}>{r.label}</div><Input value={r.value} placeholder={'36"'} onChange={e => set(i, e.target.value)} /></div>
+          <div key={i}><div className="m-lbl" style={{ marginBottom: 3 }}>{r.label}</div>
+            <Input value={r.value} placeholder={'36"'} className={bad(r.value) ? "input-bad" : undefined} onChange={e => set(i, e.target.value)} /></div>
         ))}
       </div>
-      <Button variant="primary" size="sm" style={{ marginTop: 12 }} disabled={!garment.trim() || !rows.some(r => r.value.trim())}
+      {anyBad && <div className="field-err">Enter measurements as a number with an optional unit, e.g. 36, 36.5, 36" or 34"-36".</div>}
+      <Button variant="primary" size="sm" style={{ marginTop: 12 }} disabled={!garment.trim() || !rows.some(r => r.value.trim()) || anyBad}
         onClick={() => onSave({ takenAt: new Date().toISOString(), garment: garment.trim(), values: rows.filter(r => r.value.trim()) })}>
         Save measurement
       </Button>

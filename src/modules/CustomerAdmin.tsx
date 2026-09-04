@@ -4,7 +4,7 @@ import { useWindows } from "../components/windows/WindowManager";
 import { Avatar, Badge, Button, Field, Input, Select } from "../components/ui/ui";
 import { Icon } from "../components/Icon";
 import { STAGE_META } from "../lib/stages";
-import { inr, balance, paid, fmtDate, measurementStale, phoneDigits, phoneLocal, phoneIntl } from "../lib/format";
+import { inr, balance, paid, fmtDate, measurementStale, phoneDigits, phoneLocal, phoneIntl, isMeasureValue } from "../lib/format";
 import { exportCustomerCSV, exportCustomerJSON } from "../lib/exportData";
 import "./modules.css";
 
@@ -115,15 +115,18 @@ function AddMeas({ onSave }: { onSave: (m: { takenAt: string; garment: string; v
   const [garment, setGarment] = useState("");
   const [rows, setRows] = useState([{ label: "Chest", value: "" }, { label: "Waist", value: "" }, { label: "Shoulder", value: "" }, { label: "Length", value: "" }]);
   const set = (i: number, v: string) => setRows(rs => rs.map((r, j) => j === i ? { ...r, value: v } : r));
+  const bad = (v: string) => v.trim().length > 0 && !isMeasureValue(v);
+  const anyBad = rows.some(r => bad(r.value));
   return (
     <div className="meas-card" style={{ marginTop: 8 }}>
       <Field label="Garment"><Input value={garment} placeholder="Blouse, Kurta…" onChange={e => setGarment(e.target.value)} /></Field>
       <div className="meas-grid" style={{ marginTop: 8 }}>
         {rows.map((r, i) => (
-          <div key={i}><div className="m-lbl" style={{ marginBottom: 3 }}>{r.label}</div><Input value={r.value} placeholder='36"' onChange={e => set(i, e.target.value)} /></div>
+          <div key={i}><div className="m-lbl" style={{ marginBottom: 3 }}>{r.label}</div><Input value={r.value} placeholder='36"' className={bad(r.value) ? "input-bad" : undefined} onChange={e => set(i, e.target.value)} /></div>
         ))}
       </div>
-      <Button variant="primary" size="sm" style={{ marginTop: 10 }} disabled={!garment.trim()} onClick={() => onSave({ takenAt: new Date().toISOString(), garment: garment.trim(), values: rows.filter(r => r.value.trim()) })}>Save measurement</Button>
+      {anyBad && <div className="field-err">Use a number with an optional unit, e.g. 36, 36.5, 36" or 34"-36".</div>}
+      <Button variant="primary" size="sm" style={{ marginTop: 10 }} disabled={!garment.trim() || anyBad} onClick={() => onSave({ takenAt: new Date().toISOString(), garment: garment.trim(), values: rows.filter(r => r.value.trim()) })}>Save measurement</Button>
     </div>
   );
 }

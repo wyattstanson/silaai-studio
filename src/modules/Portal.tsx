@@ -4,7 +4,7 @@ import { Avatar, Badge, Button, Card, Empty, Field, Input, Stat } from "../compo
 import { Icon, type IconName } from "../components/Icon";
 import { OrderDetail, dueBadge } from "./OrderSheet";
 import { STAGE_META, isClosed } from "../lib/stages";
-import { inr, balance, paid, daysUntil, fmtDate, fmtDay, measurementStale } from "../lib/format";
+import { inr, balance, paid, daysUntil, fmtDate, fmtDay, measurementStale, isMeasureValue } from "../lib/format";
 import type { ActivityType, Order } from "../data/types";
 import "./modules.css";
 
@@ -195,7 +195,9 @@ function CustomerAddMeas({ onSave }: { onSave: (m: MeasIn) => void }) {
   };
   const set = (i: number, v: string) => setRows(rs => rs.map((r, j) => j === i ? { ...r, value: v } : r));
   const finalName = garment === "__other" ? custom.trim() : garment;
-  const ready = finalName.length > 0 && rows.some(r => r.value.trim());
+  const bad = (v: string) => v.trim().length > 0 && !isMeasureValue(v);
+  const anyBad = rows.some(r => bad(r.value));
+  const ready = finalName.length > 0 && rows.some(r => r.value.trim()) && !anyBad;
 
   return (
     <div style={{ padding: 16 }}>
@@ -215,9 +217,10 @@ function CustomerAddMeas({ onSave }: { onSave: (m: MeasIn) => void }) {
         <div className="eyebrow" style={{ margin: "14px 0 8px" }}>2 · Your measurements</div>
         <div className="meas-grid">
           {rows.map((r, i) => (
-            <div key={i}><div className="m-lbl" style={{ marginBottom: 3 }}>{r.label}</div><Input value={r.value} placeholder={'36"'} onChange={e => set(i, e.target.value)} /></div>
+            <div key={i}><div className="m-lbl" style={{ marginBottom: 3 }}>{r.label}</div><Input value={r.value} placeholder={'36"'} className={bad(r.value) ? "input-bad" : undefined} onChange={e => set(i, e.target.value)} /></div>
           ))}
         </div>
+        {anyBad && <div className="field-err">Use a number with an optional unit, e.g. 36, 36.5, 36" or 34"-36".</div>}
         <Button variant="primary" size="sm" style={{ marginTop: 12 }} disabled={!ready}
           onClick={() => onSave({ takenAt: new Date().toISOString(), garment: finalName, values: rows.filter(r => r.value.trim()) })}>
           Save measurement

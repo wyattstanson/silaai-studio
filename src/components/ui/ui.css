@@ -98,6 +98,8 @@
   transition: border-color .15s, box-shadow .15s;
 }
 .input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--acacia); box-shadow: var(--ring); }
+.input-bad, .input-bad:focus { border-color: var(--urgent); box-shadow: 0 0 0 3px var(--urgent-bg); }
+.field-err { margin-top: 8px; font-size: 12px; color: var(--clay); background: var(--urgent-bg); padding: 7px 10px; border-radius: 8px; }
 .textarea { resize: vertical; min-height: 66px; line-height: 1.5; }
 
 /* ---- Table --------------------------------------------------- */
